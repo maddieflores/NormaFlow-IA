@@ -1,0 +1,453 @@
+<div class="admin-layout">
+  <app-sidebar [activeRoute]="'/admin'" [navItems]="navItems"></app-sidebar>
+  <div class="admin-main" style="padding: 40px; color: #1e293b;">
+
+    <!-- HEADER -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
+      <div>
+        <h1 style="font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">Buenos días, {{ user?.nombre
+          || 'Administrador' }}</h1>
+        <p style="color: #64748b; font-size: 14px; margin: 0;">Aquí tienes el resumen gerencial y el estado de los
+          workflows al día de hoy.</p>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+
+        <div class="notif-wrap" style="position: relative;">
+          <button
+            style="background: white; border: 1px solid #cbd5e1; color: #1e293b; padding: 10px; border-radius: 8px; cursor: pointer; position: relative; display: flex; align-items: center;"
+            (click)="toggleNotifPanel()" title="Notificaciones">
+            <i class="ph ph-bell text-lg" style="color: #64748b;"></i>
+            @if (notificaciones.length > 0) {
+            <span
+              style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold;">{{
+              notificaciones.length }}</span>
+            }
+          </button>
+          @if (showNotifs) {
+          <div (click)="$event.stopPropagation()"
+            style="position: absolute; right: 0; top: 50px; width: 320px; z-index: 100; padding: 16px; background: white; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
+            <div
+              style="display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+              <h3 style="font-size: 14px; font-weight: 600; color: #0f172a; margin: 0;"><i
+                  class="ph ph-bell-ringing"></i> Notificaciones</h3>
+              @if (notificaciones.length > 0) {
+              <button
+                style="background: transparent; color: #3b82f6; border: none; cursor: pointer; font-size: 12px; font-weight: 500;"
+                (click)="marcarTodasLeidas()">Limpiar</button>
+              }
+            </div>
+            <div style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+              @for (n of notificaciones; track n.id) {
+              <div (click)="marcarLeida(n.id)"
+                style="padding: 12px; display: flex; gap: 10px; cursor: pointer; background: white; border-radius: 8px; border: 1px solid #e2e8f0; border-left: 3px solid #3b82f6;">
+                <span style="font-size: 12px; color: #1e293b; font-weight: 500; line-height: 1.4;">{{ n.mensaje
+                  }}</span>
+              </div>
+              }
+              @if (notificaciones.length === 0) {
+              <div style="padding: 20px 10px; text-align: center; color: #64748b;">
+                <i class="ph ph-bell-slash" style="font-size: 24px; margin-bottom: 8px;"></i>
+                <p style="margin: 0; font-size: 13px;">Todo al día</p>
+              </div>
+              }
+            </div>
+          </div>
+          }
+        </div>
+
+        <button
+          style="background: white; border: 1px solid #cbd5e1; color: #1e293b; padding: 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center;"
+          (click)="loadData()" [disabled]="loading" title="Sincronizar">
+          @if(loading) { <i class="ph ph-spinner ph-spin text-lg" style="color: #64748b;"></i> }
+          @else { <i class="ph ph-arrows-clockwise text-lg" style="color: #64748b;"></i> }
+        </button>
+
+        <div style="width: 1px; height: 24px; background: #cbd5e1; margin: 0 4px;"></div>
+
+        <button
+          style="background: white; border: 1px solid #cbd5e1; color: #1e293b; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;"
+          (click)="router.navigate(['/admin/politicas'])">
+          Crear Política
+        </button>
+        <button
+          style="background: white; border: 1px solid #cbd5e1; color: #1e293b; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;"
+          (click)="router.navigate(['/editor'])">
+          Nuevo Flujo
+        </button>
+        <button
+          style="background: #2563eb; border: none; color: white; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;"
+          (click)="router.navigate(['/admin/tramites'])">
+          Iniciar Trámite
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="admin-content">
+
+      @if (loading) {
+      <div class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Sincronizando información...</p>
+      </div>
+      } @else {
+
+      <!-- ROW 1: KPIs & CHARTS -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 24px;">
+
+        <!-- KPI: Trámites Completados -->
+        <div
+          style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: space-between;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+            <h3 style="font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase; margin: 0;">
+              Trámites Finalizados</h3>
+            <div
+              style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16, 185, 129, 0.1); color: #10b981; display: flex; align-items: center; justify-content: center;">
+              <i class="ph ph-check-circle"></i>
+            </div>
+          </div>
+          <div>
+            <div style="font-size: 32px; font-weight: 700; color: #0f172a; line-height: 1;">{{ tramitesCompletados }}
+            </div>
+            <div style="font-size: 13px; font-weight: 500; color: #10b981; margin-top: 8px;"><i
+                class="ph ph-trend-up"></i> +12% este mes</div>
+          </div>
+        </div>
+
+        <!-- KPI: Eficiencia Global -->
+        <div
+          style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: space-between;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+            <h3 style="font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase; margin: 0;">
+              Eficiencia Global</h3>
+            <div
+              style="width: 32px; height: 32px; border-radius: 8px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; display: flex; align-items: center; justify-content: center;">
+              <i class="ph ph-lightning"></i>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 32px; font-weight: 700; color: #0f172a; line-height: 1;">{{ kpiEficiencia }}<span
+                style="font-size: 18px; color: #64748b; margin-left: 4px;">%</span></div>
+            <div style="width: 48px; height: 48px;">
+              <svg viewBox="0 0 36 36" style="width: 100%; height: 100%;">
+                <path style="fill: none; stroke: #e2e8f0; stroke-width: 3;"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path style="fill: none; stroke: #3b82f6; stroke-width: 3; stroke-linecap: round;"
+                  [attr.stroke-dasharray]="kpiEficiencia + ', 100'"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- LINE CHART: Tendencia -->
+        <div
+          style="grid-column: span 2; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; display: flex; flex-direction: column;">
+          <h3 style="font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase; margin: 0 0 16px 0;">
+            Evolución de Trámites</h3>
+          <div style="flex: 1; min-height: 120px; position: relative;">
+            <canvas baseChart [data]="trendData" [options]="lineChartOptions" [type]="'line'"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- DASHBOARD PANELS -->
+      <div style="display: flex; flex-direction: column; gap: 32px;">
+
+        <!-- DIRECTORIO DE POLÍTICAS -->
+        <div
+          style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0;">Directorio de Políticas</h2>
+            <button
+              style="background: white; border: 1px solid #cbd5e1; color: #1e293b; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;"
+              (click)="router.navigate(['/editor'])"><i class="ph ph-plus"></i> Nuevo</button>
+          </div>
+
+          @if (politicas.length === 0) {
+          <div style="padding: 40px; text-align: center; color: #64748b;">
+            <i class="ph ph-folder-open" style="font-size: 32px; margin-bottom: 12px; opacity: 0.5;"></i>
+            <p>No hay flujos registrados aún.</p>
+          </div>
+          } @else {
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 2px solid #e2e8f0;">
+                  <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Política</th>
+                  <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Estado</th>
+                  <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Categoría</th>
+                  <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Métricas</th>
+                  <th style="padding: 12px 8px;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of politicas.slice(0,5); track p.id) {
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="padding: 16px 8px;">
+                    <div style="font-weight: 600; color: #1e293b; font-size: 14px; margin-bottom: 4px;">{{
+                      p.nombre?.trim() || '(Sin nombre)' }}
+                    </div>
+                    <div style="font-size: 11px; color: #64748b;">Creada: {{ p.fechaCreacion | date:'dd/MM/yy' }}</div>
+                  </td>
+                  <td style="padding: 16px 8px;">
+                    @if (p.estado === 'ACTIVA') {
+                    <span
+                      style="background: rgba(16,185,129,0.1); color: #10b981; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid rgba(16,185,129,0.2);"><span
+                        style="display: inline-block; width: 6px; height: 6px; background: #10b981; border-radius: 50%; margin-right: 4px;"></span>Activa</span>
+                    } @else if (p.estado === 'BORRADOR') {
+                    <span
+                      style="background: rgba(59,130,246,0.1); color: #3b82f6; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid rgba(59,130,246,0.2);"><span
+                        style="display: inline-block; width: 6px; height: 6px; background: #3b82f6; border-radius: 50%; margin-right: 4px;"></span>Borrador</span>
+                    } @else {
+                    <span
+                      style="background: rgba(239,68,68,0.1); color: #ef4444; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid rgba(239,68,68,0.2);"><span
+                        style="display: inline-block; width: 6px; height: 6px; background: #ef4444; border-radius: 50%; margin-right: 4px;"></span>Inactiva</span>
+                    }
+                  </td>
+                  <td style="padding: 16px 8px;">
+                    <span class="badge-tag" [class.badge-tag-electric]="p.categoria === 'Servicios Eléctricos'"
+                      [class.badge-tag-general]="!p.categoria || p.categoria === 'General'">
+                      <i class="ph ph-tag"></i> {{ p.categoria || 'General' }}
+                    </span>
+                  </td>
+                  <td style="padding: 16px 8px;">
+                    <div style="display: flex; gap: 10px; font-size: 12px; color: #64748b; font-weight: 500;">
+                      <span title="Trámites en curso"><i class="ph ph-activity"
+                          style="color: #3b82f6; margin-right: 4px;"></i>{{ p.tramitesActivos || 0 }}</span>
+                      <span title="Completados"><i class="ph ph-check-circle"
+                          style="color: #10b981; margin-right: 4px;"></i>{{ p.tramitesCompletados || 0 }}</span>
+                    </div>
+                  </td>
+                  <td style="padding: 16px 8px;">
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                      <button
+                        style="width: 32px; height: 32px; border-radius: 8px; background: white; border: 1px solid #e2e8f0; cursor: pointer; color: #475569;"
+                        (click)="verDiagrama(p)" title="Ver Mapa"><i class="ph ph-eye"></i></button>
+                      <button
+                        style="width: 32px; height: 32px; border-radius: 8px; background: white; border: 1px solid #e2e8f0; cursor: pointer; color: #475569;"
+                        (click)="router.navigate(['/editor', p.id])" title="Editar Flujo"><i
+                          class="ph ph-pencil-simple"></i></button>
+                      <button
+                        style="width: 32px; height: 32px; border-radius: 8px; background: white; border: 1px solid #e2e8f0; cursor: pointer; color: #8b5cf6;"
+                        (click)="analizarIA(p.id, p.nombre)" [disabled]="actionLoading['ai_'+p.id]" title="Analizar IA">
+                        @if(actionLoading['ai_'+p.id]){ <i class="ph ph-spinner ph-spin"></i> } @else { <i
+                          class="ph ph-brain"></i> }
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          }
+        </div>
+
+        <!-- RESULTADOS IA -->
+        @if (aiResult) {
+        <div class="glass-card ai-result-card animate-up">
+          <div class="card-header ai-header">
+            <h2 class="card-title"><i class="ph ph-sparkle"></i> Insights de IA para: {{ aiPoliticaNombre }}</h2>
+            <button class="btn-icon" (click)="aiResult = null"><i class="ph ph-x"></i></button>
+          </div>
+          <div class="ai-stats-row">
+            <div class="ai-stat">
+              <span class="ai-stat-val">{{ aiResult.totalTareas }}</span>
+              <span class="ai-stat-lbl">Tareas</span>
+            </div>
+            <div class="ai-stat">
+              <span class="ai-stat-val">{{ aiResult.promedioMinutos | number:'1.0-0' }}m</span>
+              <span class="ai-stat-lbl">Promedio</span>
+            </div>
+          </div>
+          <div class="ai-recommendation">
+            <strong>Recomendación:</strong> {{ aiResult.recomendacion }}
+          </div>
+          @if (aiResult.cuellos.length > 0) {
+          <div class="ai-bottlenecks">
+            <h4>Cuellos de botella detectados:</h4>
+            <ul>
+              @for (c of aiResult.cuellos; track c.nodo) {
+              <li>
+                <span class="nodo-name">{{ c.nodo }}</span>
+                <span class="exceso">+{{ c.excesoPct | number:'1.0-0' }}% tiempo</span>
+              </li>
+              }
+            </ul>
+          </div>
+          }
+        </div>
+        }
+
+        <!-- TRÁMITES RECIENTES & ALERTAS ROW -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px;">
+
+          <!-- TRÁMITES RECIENTES -->
+          <div
+            style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+              <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0;">Trámites Recientes</h2>
+              <button
+                style="background: white; border: 1px solid #cbd5e1; color: #1e293b; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 4px;"
+                (click)="router.navigate(['/admin/tramites'])">Ver Todos <i class="ph ph-arrow-right"></i></button>
+            </div>
+
+            @if (tramites.length === 0) {
+            <div style="padding: 40px; text-align: center; color: #64748b;">
+              <i class="ph ph-files" style="font-size: 32px; margin-bottom: 12px; opacity: 0.5;"></i>
+              <p>No hay trámites en ejecución.</p>
+            </div>
+            } @else {
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                  <tr style="border-bottom: 2px solid #e2e8f0;">
+                    <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Referencia</th>
+                    <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Cliente</th>
+                    <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Inicio</th>
+                    <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (t of tramites.slice(0, 5); track t.id) {
+                  <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 16px 8px;">
+                      <div style="font-weight: 600; color: #1e293b; font-size: 14px; margin-bottom: 4px;">{{
+                        t.numeroReferencia || t.id.slice(0, 8) }}</div>
+                      <div style="font-size: 11px; color: #64748b;">ID: {{ t.id | slice:0:6 }}...</div>
+                    </td>
+                    <td style="padding: 16px 8px;">
+                      <div style="display: flex; align-items: center; gap: 10px;">
+                        <div
+                          style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px; flex-shrink: 0; box-shadow: 0 2px 4px rgba(59,130,246,0.2);">
+                          {{ (t.nombreCliente || t.clienteId).charAt(0).toUpperCase() }}
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                          <span style="font-size: 14px; font-weight: 500; color: #1e293b;">{{ (t.nombreCliente ||
+                            t.clienteId).split(' ')[0] }} {{ (t.nombreCliente || t.clienteId).split(' ')[1] || ''
+                            }}</span>
+                          <span style="font-size: 11px; color: #64748b;">{{ (t.nombreCliente ||
+                            'user').toLowerCase().split(' ').join('.') }}@empresa.com</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td style="padding: 16px 8px;">
+                      <div style="font-weight: 500; color: #1e293b; font-size: 14px; margin-bottom: 4px;">{{
+                        t.fechaInicio | date:'dd MMM, yyyy' }}</div>
+                      <div style="font-size: 11px; color: #64748b;">{{ t.fechaInicio | date:'HH:mm' }}</div>
+                    </td>
+                    <td style="padding: 16px 8px;">
+                      <span class="badge" [class]="badgeTramite(t.estado)">{{ t.estado }}</span>
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            }
+          </div>
+
+          <!-- CENTRO DE ALERTAS -->
+          <div
+            style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+              <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0;">Centro de Alertas</h2>
+              <button
+                style="background: white; border: 1px solid #cbd5e1; color: #1e293b; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 4px;"
+                (click)="marcarTodasLeidas()"><i class="ph ph-checks"></i> Leídas</button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              @if (notificaciones.length === 0) {
+              <div style="padding: 40px; text-align: center; color: #64748b;">
+                <i class="ph ph-bell-slash" style="font-size: 32px; margin-bottom: 12px; opacity: 0.5;"></i>
+                <p>Todo al día. No hay alertas.</p>
+              </div>
+              } @else {
+              @for (n of notificaciones; track n.id) {
+              <div
+                style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; border-left: 3px solid #3b82f6;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; margin-top: 6px;"></div>
+                <div style="flex: 1;">
+                  <p style="margin: 0 0 4px; font-size: 13px; color: #1e3a8a; font-weight: 600; line-height: 1.4;">{{
+                    n.mensaje }}</p>
+                  <span style="font-size: 11px; color: #64748b;">{{ n.fechaCreacion | date:'short' }}</span>
+                </div>
+                <button
+                  style="width: 28px; height: 28px; border-radius: 6px; background: transparent; border: none; cursor: pointer; color: #475569; display: flex; align-items: center; justify-content: center;"
+                  (click)="marcarLeida(n.id)"><i class="ph ph-x"></i></button>
+              </div>
+              }
+              }
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      }
+    </div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-container">
+  @for (toast of toasts; track toast.id) {
+  <div class="toast" [class]="'toast-' + toast.type">
+    {{ toast.message }}
+  </div>
+  }
+</div>
+
+<!-- MODAL DIAGRAMA -->
+@if (showDiagramaModal && politicaVisualizando) {
+<div class="modal-overlay glass" (click)="cerrarDiagrama()"
+  style="display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000;">
+  <div class="modal-diagrama glass-panel" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title"><i class="ph ph-projector-screen-chart"></i> {{ politicaVisualizando.nombre }}</h2>
+        <p class="modal-sub">
+          <span class="badge" [class]="badgeClass(politicaVisualizando.estado)">{{ politicaVisualizando.estado }}</span>
+          &nbsp;· v{{ politicaVisualizando.version }}
+        </p>
+      </div>
+      <div class="modal-actions-header">
+        <button class="btn-sm btn-glass primary"
+          (click)="router.navigate(['/editor', politicaVisualizando.id]); cerrarDiagrama()">
+          <i class="ph ph-pencil-simple"></i> Editar
+        </button>
+        <button class="btn-sm btn-glass" (click)="cerrarDiagrama()"><i class="ph ph-x"></i></button>
+      </div>
+    </div>
+    <div class="diagrama-container">
+      @if (!politicaVisualizando.nodos || politicaVisualizando.nodos.length === 0) {
+      <div class="empty-state">Sin nodos definidos.</div>
+      } @else {
+      <div class="swimlanes-wrapper">
+        @for (lane of getSwimlanes(politicaVisualizando.nodos); track lane.dept) {
+        <div class="swimlane">
+          <div class="swimlane-header">
+            <span class="swimlane-dept">{{ lane.dept }}</span>
+            <span class="swimlane-count">{{ lane.nodos.length }} nodos</span>
+          </div>
+          <div class="swimlane-body">
+            @for (nodo of lane.nodos; track nodo.id) {
+            <div class="nodo-card" [class]="'nodo-' + nodo.tipo.toLowerCase()">
+              <div class="nodo-info">
+                <p class="nodo-nombre">{{ nodo.nombre }}</p>
+                @if(nodo.descripcion){ <p class="nodo-desc">{{ nodo.descripcion }}</p> }
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+        }
+      </div>
+      }
+    </div>
+  </div>
+</div>
+}

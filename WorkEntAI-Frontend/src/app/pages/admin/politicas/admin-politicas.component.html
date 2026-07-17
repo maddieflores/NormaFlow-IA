@@ -1,0 +1,375 @@
+<div class="admin-layout" style="background-color: #f8fafc; min-height: 100vh;">
+  <app-sidebar [activeRoute]="'/admin/politicas'" [navItems]="navItems"></app-sidebar>
+  <div class="admin-main" style="padding: 40px; color: #1e293b;">
+
+    <!-- HEADER -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+      <div>
+        <h1 style="font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">Políticas de negocio</h1>
+        <p style="color: #64748b; font-size: 14px; margin: 0;">Gestiona las políticas y sus diagramas de workflow</p>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <button
+          style="background: white; border: 1px solid #cbd5e1; color: #1e293b; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;"
+          (click)="showIAModal = true">
+          Crear con IA
+        </button>
+        <button
+          style="background: #2563eb; border: none; color: white; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;"
+          (click)="showCreateModal = true">
+          Nueva política
+        </button>
+      </div>
+    </div>
+
+    <!-- FILTER PILLS -->
+    <div style="display: flex; gap: 12px; margin-bottom: 32px;">
+      <button class="btn-filter-pill" [class.active]="statusFilter === ''" (click)="setStatus('')">Todas</button>
+      <button class="btn-filter-pill" [class.active]="statusFilter === 'ACTIVA'"
+        (click)="setStatus('ACTIVA')">Activas</button>
+      <button class="btn-filter-pill" [class.active]="statusFilter === 'BORRADOR'"
+        (click)="setStatus('BORRADOR')">Borradores</button>
+      <button class="btn-filter-pill" [class.active]="statusFilter === 'INACTIVA'"
+        (click)="setStatus('INACTIVA')">Inactivas</button>
+    </div>
+
+    <!-- TABLE CARD -->
+    <div
+      style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;">
+      <button
+        style="background: #2563eb; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; margin-bottom: 24px; cursor: pointer;"
+        (click)="loadPoliticas()">
+        Recargar
+      </button>
+
+      @if (loading) {
+      <div style="padding: 40px; text-align: center; color: #64748b;">Cargando directorio...</div>
+      } @else if (filteredPoliticas.length === 0) {
+      <div style="padding: 40px; text-align: center; color: #64748b;">No se encontraron políticas.</div>
+      } @else {
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 2px solid #e2e8f0;">
+              <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Nombre</th>
+              <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Descripción</th>
+              <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Versión</th>
+              <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Estado</th>
+              <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Responsable</th>
+              <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Creado por</th>
+              <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Actualización</th>
+              <th style="padding: 12px 8px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of filteredPoliticas; track p.id) {
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 16px 8px; font-size: 14px; color: #334155; font-weight: 500;">{{ p.nombre?.trim() ||
+                '(Sin nombre)' }}</td>
+              <td style="padding: 16px 8px; font-size: 14px; color: #475569; max-width: 250px;">
+                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  {{ p.descripcion || 'Sin descripción' }}
+                </div>
+              </td>
+              <td style="padding: 16px 8px; font-size: 14px; color: #475569;">{{ p.version || 1 }}</td>
+              <td style="padding: 16px 8px;">
+                @if (p.estado === 'ACTIVA') {
+                <span
+                  style="background: rgba(16,185,129,0.1); color: #10b981; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid rgba(16,185,129,0.2);">
+                  <span
+                    style="display: inline-block; width: 6px; height: 6px; background: #10b981; border-radius: 50%; margin-right: 4px;"></span>
+                  Activa
+                </span>
+                } @else if (p.estado === 'BORRADOR') {
+                <span
+                  style="background: rgba(59,130,246,0.1); color: #3b82f6; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid rgba(59,130,246,0.2);">
+                  <span
+                    style="display: inline-block; width: 6px; height: 6px; background: #3b82f6; border-radius: 50%; margin-right: 4px;"></span>
+                  Borrador
+                </span>
+                } @else {
+                <span
+                  style="background: rgba(239,68,68,0.1); color: #ef4444; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid rgba(239,68,68,0.2);">
+                  <span
+                    style="display: inline-block; width: 6px; height: 6px; background: #ef4444; border-radius: 50%; margin-right: 4px;"></span>
+                  Inactiva
+                </span>
+                }
+              </td>
+              <td style="padding: 16px 8px; font-size: 14px; color: #475569;">{{ p.nombreCreadoPor || 'Admin' }}</td>
+              <td style="padding: 16px 8px; font-size: 14px; color: #475569;">{{ p.nombreCreadoPor || 'Admin' }}</td>
+              <td style="padding: 16px 8px; font-size: 14px; color: #475569;">
+                {{ p.fechaActualizacion ? (p.fechaActualizacion | date:'M/d/yy, h:mm a') : (p.fechaCreacion |
+                date:'M/d/yy, h:mm a') }}
+              </td>
+              <td
+                style="padding: 16px 8px; text-align: right; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+
+                @if (p.estado === 'ACTIVA') {
+                <button
+                  style="background: #ef4444; border: none; color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer;"
+                  (click)="togglePolitica(p)">
+                  Desactivar
+                </button>
+                }
+                <button class="btn-action-row" (click)="verDiagrama(p)">
+                  Diseñar diagrama
+                </button>
+                <button class="btn-action-row" (click)="router.navigate(['/editor', p.id])">
+                  Editar
+                </button>
+                @if (p.estado !== 'ACTIVA') {
+                <button class="btn-action-row" (click)="togglePolitica(p)">
+                  Activar
+                </button>
+                <button
+                  style="background: #dc2626; border: none; color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                  Desactivar
+                </button>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL CREAR POLITICA -->
+@if (showCreateModal) {
+<div class="modal-overlay glass" (click)="showCreateModal = false"
+  style="display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000;">
+  <div class="modal-diagrama glass-panel" (click)="$event.stopPropagation()"
+    style="background: var(--card); border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; max-width: 600px; border: 1px solid var(--border);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="font-size: 18px; font-weight: 700; color: var(--text); margin: 0;">Nueva política de negocio</h2>
+      <button style="background: transparent; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer;"
+        (click)="showCreateModal = false"><i class="ph ph-x"></i></button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+      <div>
+        <label
+          style="display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px;">Nombre</label>
+        <input type="text" [(ngModel)]="nuevaPolitica.nombre" placeholder="Nombre de la política"
+          style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background-color: var(--bg); color: var(--text);">
+      </div>
+      <div>
+        <label
+          style="display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px;">Descripción</label>
+        <input type="text" [(ngModel)]="nuevaPolitica.descripcion" placeholder="Descripción"
+          style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background-color: var(--bg); color: var(--text);">
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+
+      <!-- Custom Dropdown: Responsable -->
+      <div style="position: relative;">
+        <label
+          style="display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px;">Responsable
+          (usuario)</label>
+        <div
+          style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background-color: var(--bg); cursor: pointer; display: flex; justify-content: space-between; align-items: center;"
+          (click)="showResponsableDropdown = !showResponsableDropdown; showCreadoPorDropdown = false;">
+          <span [style.color]="nuevaPolitica.responsableId ? 'var(--text)' : 'var(--text-faint)'">
+            {{ nuevaPolitica.responsableNombre || 'Selecciona un usuario' }}
+          </span>
+          <i class="ph ph-caret-down" style="color: var(--text-muted);"></i>
+        </div>
+
+        @if (showResponsableDropdown) {
+        <div
+          style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 10; max-height: 200px; overflow-y: auto;">
+          @for (u of staffUsuarios; track u.id) {
+          <div
+            style="padding: 10px 14px; font-size: 14px; cursor: pointer; transition: background 0.2s; color: var(--text);"
+            onmouseover="this.style.background='var(--bg-2)'" onmouseout="this.style.background='var(--card)'"
+            (click)="selectResponsable(u)">
+            <div style="font-weight: 500;">{{ u.nombre }}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Rol: {{ u.rol }}</div>
+          </div>
+          }
+        </div>
+        }
+      </div>
+
+      <!-- Custom Dropdown: Creado Por -->
+      <div style="position: relative;">
+        <label
+          style="display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px;">Creado
+          por
+          (usuario)</label>
+        <div
+          style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background-color: var(--bg); cursor: pointer; display: flex; justify-content: space-between; align-items: center;"
+          (click)="showCreadoPorDropdown = !showCreadoPorDropdown; showResponsableDropdown = false;">
+          <span [style.color]="nuevaPolitica.creadoPorId ? 'var(--text)' : 'var(--text-faint)'">
+            {{ nuevaPolitica.creadoPorNombre || 'Selecciona un usuario' }}
+          </span>
+          <i class="ph ph-caret-down" style="color: var(--text-muted);"></i>
+        </div>
+
+        @if (showCreadoPorDropdown) {
+        <div
+          style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 10; max-height: 200px; overflow-y: auto;">
+          @for (u of staffUsuarios; track u.id) {
+          <div
+            style="padding: 10px 14px; font-size: 14px; cursor: pointer; transition: background 0.2s; color: var(--text);"
+            onmouseover="this.style.background='var(--bg-2)'" onmouseout="this.style.background='var(--card)'"
+            (click)="selectCreadoPor(u)">
+            <div style="font-weight: 500;">{{ u.nombre }}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Rol: {{ u.rol }}</div>
+          </div>
+          }
+        </div>
+        }
+      </div>
+
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; gap: 12px;">
+      <button
+        style="background: var(--card); color: var(--text-muted); border: 1px solid var(--border); padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer;"
+        (click)="showCreateModal = false">
+        Cancelar
+      </button>
+      <button
+        style="background: #2563eb; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer;"
+        (click)="showCreateModal = false; router.navigate(['/editor'])">
+        Crear política
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- MODAL DIAGRAMA -->
+@if (showDiagramaModal && politicaVisualizando) {
+<div class="modal-overlay glass" (click)="cerrarDiagrama()">
+  <div class="modal-diagrama glass-panel" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title"><i class="ph ph-projector-screen-chart"></i> {{ politicaVisualizando.nombre }}</h2>
+        <p class="modal-sub">
+          <span class="badge" [class]="badgeClass(politicaVisualizando.estado)">{{ politicaVisualizando.estado }}</span>
+          &nbsp;· ID: {{ politicaVisualizando.id | slice:0:8 }}
+        </p>
+      </div>
+      <div class="modal-actions-header">
+        <button class="btn-sm btn-glass primary"
+          (click)="router.navigate(['/editor', politicaVisualizando.id]); cerrarDiagrama()">
+          <i class="ph ph-pencil-simple"></i> Editar
+        </button>
+        <button class="btn-sm btn-glass" (click)="cerrarDiagrama()"><i class="ph ph-x"></i></button>
+      </div>
+    </div>
+    <div class="diagrama-container">
+      @if (!politicaVisualizando.nodos || politicaVisualizando.nodos.length === 0) {
+      <div class="empty-state">Sin nodos definidos en esta versión.</div>
+      } @else {
+      <div class="swimlanes-wrapper">
+        @for (lane of getSwimlanes(politicaVisualizando.nodos); track lane.dept) {
+        <div class="swimlane">
+          <div class="swimlane-header">
+            <span class="swimlane-dept">{{ lane.dept }}</span>
+            <span class="swimlane-count">{{ lane.nodos.length }} nodos</span>
+          </div>
+          <div class="swimlane-body">
+            @for (nodo of lane.nodos; track nodo.id) {
+            <div class="nodo-card" [class]="'nodo-' + nodo.tipo.toLowerCase()">
+              <div class="nodo-info">
+                <p class="nodo-nombre">{{ nodo.nombre }}</p>
+                @if(nodo.descripcion){ <p class="nodo-desc">{{ nodo.descripcion }}</p> }
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+        }
+      </div>
+      }
+    </div>
+  </div>
+</div>
+}
+
+<!-- MODAL CREAR CON IA -->
+@if (showIAModal) {
+<div class="modal-overlay glass" (click)="showIAModal = false"
+  style="display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000;">
+  <div class="modal-diagrama glass-panel" (click)="$event.stopPropagation()"
+    style="background: var(--card); border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; max-width: 600px; border: 1px solid var(--border);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+      <h2 style="font-size: 18px; font-weight: 700; color: var(--text); margin: 0;">Crear política con IA</h2>
+      <button
+        style="background: var(--bg-2); border: 1px solid var(--border); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--text-muted); cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);"
+        (click)="showIAModal = false"><i class="ph ph-x"></i></button>
+    </div>
+
+    <p style="color: var(--text-muted); font-size: 13px; margin-top: 0; margin-bottom: 24px;">Describe el proceso y
+      generaremos
+      una propuesta de diagrama. Luego puedes crear la política y diseñar el diagrama.</p>
+
+    <div style="margin-bottom: 20px;">
+      <!-- Custom Dropdown: Creado Por (IA) -->
+      <div style="position: relative;">
+        <label
+          style="display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px;">Creado
+          por
+          (usuario)</label>
+        <div
+          style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background-color: var(--bg); cursor: pointer; display: flex; justify-content: space-between; align-items: center;"
+          (click)="showIACreadoPorDropdown = !showIACreadoPorDropdown">
+          <span [style.color]="iaPolitica.creadoPorId ? 'var(--text)' : 'var(--text-faint)'">
+            {{ iaPolitica.creadoPorNombre || 'Selecciona un usuario' }}
+          </span>
+          <i class="ph ph-caret-down" style="color: var(--text-muted);"></i>
+        </div>
+
+        @if (showIACreadoPorDropdown) {
+        <div
+          style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 10; max-height: 200px; overflow-y: auto;">
+          @for (u of staffUsuarios; track u.id) {
+          <div
+            style="padding: 10px 14px; font-size: 14px; cursor: pointer; transition: background 0.2s; color: var(--text);"
+            onmouseover="this.style.background='var(--bg-2)'" onmouseout="this.style.background='var(--card)'"
+            (click)="selectIACreadoPor(u)">
+            <div style="font-weight: 500;">{{ u.nombre }}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Rol: {{ u.rol }}</div>
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </div>
+
+    <div style="margin-bottom: 32px;">
+      <label
+        style="display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px;">Proceso</label>
+      <textarea [(ngModel)]="iaPolitica.proceso"
+        placeholder="Ej: El cliente registra una solicitud, recepción valida, supervisor aprueba o rechaza..."
+        style="width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; min-height: 100px; resize: vertical; color: var(--text); background-color: var(--bg); font-family: inherit;"></textarea>
+    </div>
+
+    <div style="display: flex; justify-content: center; gap: 12px;">
+      <button
+        style="background: var(--card); color: var(--text); border: 1px solid var(--border); padding: 10px 24px; border-radius: 20px; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);"
+        (click)="showIAModal = false">
+        Cancelar
+      </button>
+      <button
+        style="background: #93c5fd; color: white; border: none; padding: 10px 24px; border-radius: 20px; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+        Generar
+      </button>
+      <button
+        style="background: var(--card); color: var(--text-muted); border: 1px solid var(--border); padding: 10px 24px; border-radius: 20px; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+        Usar propuesta (crear y abrir)
+      </button>
+    </div>
+  </div>
+</div>
+}

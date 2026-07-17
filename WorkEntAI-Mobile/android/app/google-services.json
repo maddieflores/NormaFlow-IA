@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "359881974140",
+    "project_id": "workentai-71e87",
+    "storage_bucket": "workentai-71e87.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:359881974140:android:c382e33145c9366bbfc4f9",
+        "android_client_info": {
+          "package_name": "com.workentai.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJhTJ5xvjc4UmPt55BCaCPBmBXJeaIJrE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

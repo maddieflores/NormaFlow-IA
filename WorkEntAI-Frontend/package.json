@@ -1,0 +1,53 @@
+{
+  "name": "frontend",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "set-env": "node scripts/set-env.js",
+    "start": "npm run set-env && ng serve",
+    "build": "npm run set-env && ng build",
+    "build:prod": "cross-env NODE_ENV=production node scripts/set-env.js && ng build --configuration production",
+    "watch": "npm run set-env && ng build --watch --configuration development",
+    "test": "ng test"
+  },
+  "private": true,
+  "packageManager": "npm@10.9.2",
+  "dependencies": {
+    "@angular/animations": "^21.2.8",
+    "@angular/common": "^21.2.0",
+    "@angular/compiler": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/router": "^21.2.0",
+    "@joint/core": "^4.2.4",
+    "@stomp/stompjs": "^7.3.0",
+    "chart.js": "^4.5.1",
+    "events": "^3.3.0",
+    "fabric": "^5.3.0",
+    "firebase": "^12.16.0",
+    "ng2-charts": "^10.0.0",
+    "ngx-quill": "^30.1.3",
+    "pdfjs-dist": "^3.11.174",
+    "quill": "^2.0.3",
+    "rxjs": "~7.8.0",
+    "sockjs-client": "^1.6.1",
+    "tslib": "^2.3.0",
+    "zone.js": "0.15.1"
+  },
+  "devDependencies": {
+    "@angular/build": "^21.2.7",
+    "@angular/cli": "^21.2.7",
+    "@angular/compiler-cli": "^21.2.0",
+    "@types/fabric": "^5.3.11",
+    "@types/node": "^25.9.2",
+    "@types/pdfjs-dist": "^2.10.377",
+    "@types/sockjs-client": "^1.5.4",
+    "@vitest/coverage-v8": "^4.1.8",
+    "cross-env": "^7.0.3",
+    "jsdom": "^28.0.0",
+    "prettier": "^3.8.1",
+    "typescript": "~5.9.2",
+    "vitest": "^4.0.8"
+  }
+}

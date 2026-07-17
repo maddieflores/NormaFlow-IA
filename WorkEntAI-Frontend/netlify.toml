@@ -1,0 +1,15 @@
+[build]
+  command = "npm run build:prod"
+  publish = "dist/frontend/browser"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NODE_ENV = "production"
+  API_URL = "https://workentai-backend.onrender.com/api"
+  WS_URL = "wss://workentai-backend.onrender.com/ws/websocket"
+
+# Redirects para Angular SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

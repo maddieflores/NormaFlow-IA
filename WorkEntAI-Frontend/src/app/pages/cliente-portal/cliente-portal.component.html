@@ -1,0 +1,264 @@
+<div class="admin-layout">
+  <app-sidebar [activeRoute]="'/cliente'" [navItems]="navItems"></app-sidebar>
+  <div class="admin-main"
+    style="padding: 40px; color: #1e293b; display: flex; flex-direction: column; overflow-y: auto; flex: 1;">
+
+    <!-- HEADER -->
+    <div
+      style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <h1 style="font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">Portal del Cliente</h1>
+        <p style="color: #64748b; font-size: 14px; margin: 0;">Bienvenido, {{ user?.nombre }}</p>
+      </div>
+
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <button
+          style="background: #2563eb; border: none; color: white; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;"
+          (click)="irAgente()">
+          <i class="ph ph-sparkle text-lg"></i> Iniciar Trámite IA
+        </button>
+
+        <div
+          style="background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 4px; display: flex; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+          <div class="notif-wrap" style="position: relative;">
+            <button
+              style="border: none; background: transparent; padding: 8px 12px; cursor: pointer; position: relative;"
+              (click)="toggleNotifPanel()" title="Notificaciones">
+              <i class="ph ph-bell text-lg" style="color: #f59e0b;"></i>
+              @if (unreadCount > 0) {
+              <span
+                style="position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold;">{{
+                unreadCount }}</span>
+              }
+            </button>
+
+            @if (showNotifPanel) {
+            <div (click)="$event.stopPropagation()"
+              style="position: absolute; right: 0; top: 50px; width: 320px; z-index: 100; padding: 16px; background: white; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
+              <div
+                style="display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+                <h3 style="font-size: 14px; font-weight: 600; color: #0f172a; margin: 0;"><i
+                    class="ph ph-bell-ringing"></i> Notificaciones</h3>
+                @if (unreadCount > 0) {
+                <button
+                  style="background: transparent; color: #3b82f6; border: none; cursor: pointer; font-size: 11px; font-weight: 500;"
+                  (click)="marcarTodasLeidas()">Limpiar</button>
+                }
+              </div>
+              <div style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                @for (n of notificaciones; track n.id) {
+                <div (click)="marcarLeida(n)" [style.opacity]="n.leida ? '0.6' : '1'"
+                  style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; display: flex; gap: 10px; cursor: pointer; background: #f8fafc;">
+                  <div
+                    style="width: 24px; height: 24px; font-size: 12px; background: rgba(59,130,246,0.1); color: #3b82f6; display: flex; align-items: center; justify-content: center; border-radius: 6px;">
+                    <i class="ph ph-info"></i></div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 12px; color: #1e293b; font-weight: 600; line-height: 1.4;">{{ n.mensaje
+                      }}</span>
+                    <span style="font-size: 10px; color: #64748b;"><i class="ph ph-clock"></i> {{ n.fechaCreacion |
+                      date:'dd MMM HH:mm' }}</span>
+                  </div>
+                </div>
+                }
+                @if (notificaciones.length === 0) {
+                <div style="padding: 20px 10px; text-align: center; color: #64748b;">
+                  <div style="font-size: 24px; margin-bottom: 8px;"><i class="ph ph-bell-slash"></i></div>
+                  <p style="margin: 0; font-size: 13px;">Sin notificaciones</p>
+                </div>
+                }
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="admin-content" style="padding-top: 16px;">
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab-btn" [class.active]="activeTab === 'disponibles'" (click)="activeTab = 'disponibles'">
+          <i class="ph ph-list-plus"></i> Trámites Disponibles
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'mis-tramites'" (click)="activeTab = 'mis-tramites'">
+          <i class="ph ph-folder-open"></i> Mis Trámites
+          @if (misTramites.length > 0) {
+          <span class="tab-count">{{ misTramites.length }}</span>
+          }
+        </button>
+      </div>
+
+      <!-- TAB: DISPONIBLES -->
+      @if (activeTab === 'disponibles') {
+      @if (loadingPoliticas) {
+      <div class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Buscando trámites disponibles...</p>
+      </div>
+      } @else if (politicas.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon"><i class="ph ph-empty"></i></div>
+        <p>No hay trámites configurados actualmente.</p>
+      </div>
+      } @else {
+      <div class="cards-grid">
+        @for (p of politicas; track p.id) {
+        <div class="politica-card">
+          @if (p.categoria) {
+          <span class="card-category">{{ p.categoria }}</span>
+          }
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <h3 class="card-title">{{ p.nombre }}</h3>
+            <p class="card-desc">{{ p.descripcion || 'Sin descripción' }}</p>
+          </div>
+
+          <div class="card-meta">
+            @if (p.tiempoEstimadoDias) {
+            <span class="meta-item"><i class="ph ph-timer"></i> {{ p.tiempoEstimadoDias }} días est.</span>
+            }
+            @if (p.organizacion) {
+            <span class="meta-item"><i class="ph ph-buildings"></i> {{ p.organizacion }}</span>
+            }
+          </div>
+
+          <button class="btn-primary"
+            style="width: 100%; margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 8px;"
+            (click)="abrirModal(p)">
+            <i class="ph ph-paper-plane-tilt"></i> Solicitar
+          </button>
+        </div>
+        }
+      </div>
+      }
+      }
+
+      <!-- TAB: MIS TRÁMITES -->
+      @if (activeTab === 'mis-tramites') {
+      @if (loadingTramites) {
+      <div class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Cargando tu historial...</p>
+      </div>
+      } @else if (misTramites.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon"><i class="ph ph-folder-dashed"></i></div>
+        <p>Aún no has iniciado ningún trámite.</p>
+      </div>
+      } @else {
+      <div class="tramites-list" style="display: flex; flex-direction: column; gap: 8px;">
+        @for (t of misTramites; track t.id) {
+        <div class="tramite-row">
+          <div class="tramite-info">
+            <div class="tramite-ref">{{ t.numeroReferencia || t.id.slice(0,8).toUpperCase() }}</div>
+            <div class="tramite-nombre">{{ t.nombrePolitica }}</div>
+            @if (t.nombreNodoActual) {
+            <div class="tramite-nodo"><i class="ph ph-map-pin"></i> {{ t.nombreNodoActual }}</div>
+            }
+            <div class="tramite-fecha"><i class="ph ph-calendar"></i> {{ t.fechaInicio | date:'dd MMM yyyy' }}</div>
+          </div>
+
+          <div class="tramite-actions">
+            <span class="badge" [class]="badgeTramite(t.estado)">
+              {{ estadoLabel(t.estado) }}
+            </span>
+
+            <button class="btn-glass" (click)="verDetalle(t.id)" title="Ver detalle">
+              <i class="ph ph-eye"></i>
+            </button>
+
+            @if (t.estado === 'COMPLETADO') {
+            <button class="btn-glass" style="color: #10b981; border-color: rgba(16,185,129,0.3);"
+              (click)="descargarPdf(t)" [disabled]="descargando === t.id" title="Descargar PDF">
+              @if(descargando === t.id){ <i class="ph ph-spinner ph-spin"></i> }
+              @else{ <i class="ph ph-file-pdf"></i> }
+            </button>
+            }
+          </div>
+        </div>
+        }
+      </div>
+      }
+      }
+
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE-OVER DRAWER FOR SOLICITAR -->
+@if (showModal && politicaSeleccionada) {
+<div class="drawer-overlay" (click)="cerrarModal()"></div>
+<div class="drawer-panel" (click)="$event.stopPropagation()">
+  <div class="drawer-header">
+    <div style="display: flex; gap: 12px; align-items: flex-start;">
+      <div class="drawer-icon"><i class="ph ph-file-text"></i></div>
+      <div>
+        <h2 class="drawer-title">Iniciar Trámite</h2>
+        <p class="drawer-sub">{{ politicaSeleccionada.nombre }}</p>
+      </div>
+    </div>
+    <button class="btn-glass btn-close" (click)="cerrarModal()"><i class="ph ph-x"></i></button>
+  </div>
+
+  <div class="drawer-body">
+    <!-- Info Cards -->
+    <div class="drawer-info-grid">
+      <div class="info-card">
+        <div class="ic-label">Categoría</div>
+        <div class="ic-value">{{ politicaSeleccionada.categoria || 'General' }}</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-label">Organización</div>
+        <div class="ic-value">{{ politicaSeleccionada.organizacion || 'Interno' }}</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-label">Tiempo Est.</div>
+        <div class="ic-value"><i class="ph ph-clock"></i> {{ politicaSeleccionada.tiempoEstimadoDias || 'N/A' }} días
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-desc">
+      <h3>Acerca de este trámite</h3>
+      <p>{{ politicaSeleccionada.descripcion || 'No hay detalles adicionales para este trámite.' }}</p>
+    </div>
+
+    <div class="form-group" style="margin-top: 24px;">
+      <label style="display: flex; gap: 6px; align-items: center; color: #1e293b; font-weight: 600;">
+        <i class="ph ph-chat-text"></i> Motivo de la solicitud (Opcional)
+      </label>
+      <p style="font-size: 12px; color: #64748b; margin-bottom: 8px;">Proporciona contexto inicial para los analistas o
+        el Agente IA.</p>
+      <textarea class="form-input drawer-textarea" rows="5" [(ngModel)]="modalDescripcion"
+        placeholder="Escribe aquí los detalles o el motivo..."></textarea>
+    </div>
+
+    @if (modalError) {
+    <div class="alert-error" style="margin-top: 16px; border-radius: 8px;"><i class="ph ph-warning-circle"></i> {{
+      modalError }}</div>
+    }
+  </div>
+
+  <div class="drawer-footer">
+    <button class="btn-outline-drawer" (click)="cerrarModal()" [disabled]="enviando">Cancelar</button>
+    <button class="btn-primary-drawer" (click)="confirmarSolicitud()" [disabled]="enviando">
+      @if(enviando){ <i class="ph ph-spinner ph-spin"></i> Procesando... }
+      @else{ <i class="ph ph-paper-plane-tilt"></i> Confirmar e Iniciar }
+    </button>
+  </div>
+</div>
+}
+
+<!-- TOASTS -->
+<div class="toast-container"
+  style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;">
+  @if (toast) {
+  <div class="toast" [class]="'toast-' + toast.type"
+    style="padding: 14px 20px; border-radius: 12px; font-size: 14px; font-weight: 500; backdrop-filter: blur(12px); color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px;">
+    @if (toast.type === 'success') { <i class="ph ph-check-circle" style="font-size: 18px;"></i> }
+    @if (toast.type === 'error') { <i class="ph ph-warning-circle" style="font-size: 18px;"></i> }
+    {{ toast.message }}
+  </div>
+  }
+</div>

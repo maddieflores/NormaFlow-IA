@@ -1,0 +1,282 @@
+<div class="admin-layout">
+  <app-sidebar [activeRoute]="'/admin/tramites'" [navItems]="navItems"></app-sidebar>
+  <div class="admin-main" style="padding: 40px; color: #1e293b;">
+
+    <!-- HEADER -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+      <div>
+        <h1 style="font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">Gestor de Trámites</h1>
+        <p style="color: #64748b; font-size: 14px; margin: 0;">Explora, filtra y analiza el historial completo de
+          trámites de tus clientes.</p>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <button
+          style="background: white; border: 1px solid #cbd5e1; color: #1e293b; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center;"
+          (click)="loadTramites()" [disabled]="loading">
+          @if (loading) { Sincronizando }
+          @else { Actualizar }
+        </button>
+        <button
+          style="background: #2563eb; border: none; color: white; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center;"
+          (click)="abrirModalCrear()">
+          + Nuevo Trámite
+        </button>
+      </div>
+    </div>
+
+    <div
+      style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;">
+      <div class="card-header"
+        style="margin-bottom: 24px; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <!-- SEARCH BAR -->
+          <div style="position: relative; width: 300px;">
+            <i class="ph ph-magnifying-glass"
+              style="position: absolute; left: 12px; top: 10px; color: #64748b; font-size: 18px;"></i>
+            <input type="text" placeholder="Buscar por ID o Cliente..." (keyup)="filter($event)"
+              style="width: 100%; padding: 8px 12px 8px 36px; border-radius: 8px; border: 1px solid #cbd5e1; background: white; color: #1e293b; outline: none; font-family: inherit; transition: all 0.2s;"
+              onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 2px rgba(59, 130, 246, 0.1)';"
+              onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none';">
+          </div>
+
+          <!-- FILTERS -->
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn-filter-pill" [class.active]="statusFilter === ''" (click)="setStatus('')">Todos</button>
+            <button class="btn-filter-pill" [class.active]="statusFilter === 'NUEVO'"
+              (click)="setStatus('NUEVO')">Nuevos</button>
+            <button class="btn-filter-pill" [class.active]="statusFilter === 'EN_PROCESO'"
+              (click)="setStatus('EN_PROCESO')">En Proceso</button>
+            <button class="btn-filter-pill" [class.active]="statusFilter === 'COMPLETADO'"
+              (click)="setStatus('COMPLETADO')">Completados</button>
+            <button class="btn-filter-pill danger" [class.active]="statusFilter === 'DEMORA'"
+              (click)="setStatus('DEMORA')">⚠️ Con Demora</button>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <span style="color: #64748b; font-size: 14px; font-weight: 500;">Mostrando {{ filteredTramites.length }}
+            trámites</span>
+        </div>
+      </div>
+
+      @if (loading) {
+      <div style="padding: 40px; text-align: center; color: #64748b;">
+        <div class="spinner" style="margin-bottom: 12px;"></div>
+        <p>Cargando trámites...</p>
+      </div>
+      } @else if (filteredTramites.length === 0) {
+      <div style="padding: 40px; text-align: center; color: #64748b;">
+        <p>No se encontraron trámites con estos criterios.</p>
+      </div>
+      } @else {
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 2px solid #e2e8f0;">
+              <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">#</th>
+              <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Referencia</th>
+              <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Descripción</th>
+              <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Política</th>
+              <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Cliente</th>
+              <th style="padding: 12px 8px; font-size: 13px; font-weight: 700; color: #0f172a;">Estado</th>
+              <th style="padding: 12px 8px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of filteredTramites; track t.id; let i = $index) {
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 16px 8px; font-size: 14px; color: #64748b; font-weight: 500;">{{ i + 1 }}</td>
+              <td style="padding: 16px 8px;">
+                <div style="font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 4px;">{{
+                  t.numeroReferencia || t.id.slice(0, 8) }}</div>
+                <div style="font-size: 11px; color: #64748b; font-weight: 500;">ID: {{ t.id | slice:0:6 }}...</div>
+              </td>
+              <td style="padding: 16px 8px; font-size: 14px; color: #475569; max-width: 220px;">
+                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                  [title]="t.descripcion || ''">
+                  {{ t.descripcion || 'Sin descripción detallada' }}
+                </div>
+              </td>
+              <td style="padding: 16px 8px;">
+                <span
+                  style="background: rgba(59, 130, 246, 0.05); color: #2563eb; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; border: 1px solid rgba(59, 130, 246, 0.1);">
+                  {{ t.nombrePolitica || t.politicaId.slice(0,10) }}
+                </span>
+              </td>
+              <td style="padding: 16px 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div
+                    style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 11px; flex-shrink: 0;">
+                    {{ (t.nombreCliente || t.clienteId).charAt(0).toUpperCase() }}
+                  </div>
+                  <div style="display: flex; flex-direction: column;">
+                    <span style="color: #334155; font-weight: 500; font-size: 14px;">{{ t.nombreCliente || t.clienteId
+                      }}</span>
+                    <span style="color: #64748b; font-size: 11px;">{{ (t.nombreCliente ||
+                      t.clienteId).toLowerCase().replace(' ', '.') }}@empresa.com</span>
+                  </div>
+                </div>
+              </td>
+              <td style="padding: 16px 8px;">
+                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+                  @if (t.estado === 'COMPLETADO') {
+                  <span
+                    style="background: rgba(16,185,129,0.1); color: #10b981; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid rgba(16,185,129,0.2); display: inline-flex; align-items: center; gap: 4px;">
+                    <span
+                      style="display: inline-block; width: 6px; height: 6px; background: #10b981; border-radius: 50%;"></span>
+                    Completado
+                  </span>
+                  } @else if (t.estado === 'EN_PROCESO') {
+                  <span
+                    style="background: rgba(59,130,246,0.1); color: #3b82f6; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid rgba(59,130,246,0.2); display: inline-flex; align-items: center; gap: 4px;">
+                    <span
+                      style="display: inline-block; width: 6px; height: 6px; background: #3b82f6; border-radius: 50%;"></span>
+                    En Proceso
+                  </span>
+                  } @else if (t.estado === 'NUEVO') {
+                  <span
+                    style="background: rgba(245,158,11,0.1); color: #d97706; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid rgba(245,158,11,0.2); display: inline-flex; align-items: center; gap: 4px;">
+                    <span
+                      style="display: inline-block; width: 6px; height: 6px; background: #d97706; border-radius: 50%;"></span>
+                    Nuevo
+                  </span>
+                  } @else {
+                  <span
+                    style="background: rgba(239,68,68,0.1); color: #ef4444; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid rgba(239,68,68,0.2); display: inline-flex; align-items: center; gap: 4px;">
+                    <span
+                      style="display: inline-block; width: 6px; height: 6px; background: #ef4444; border-radius: 50%;"></span>
+                    {{ t.estado }}
+                  </span>
+                  }
+
+                  @if (isDelayed(t)) {
+                  <span
+                    style="font-size: 11px; color: #ef4444; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin-top: 2px;">
+                    ⚠️ Demorado
+                  </span>
+                  }
+                </div>
+              </td>
+              <td style="padding: 16px 8px; text-align: right; vertical-align: middle;">
+                <div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap;">
+                  <button class="btn-action-row" (click)="router.navigate(['/tramite', t.id, 'documentos'])">
+                    Documentos
+                  </button>
+                  <button class="btn-action-row"
+                    (click)="router.navigate(['/tramite', t.id, 'documentos', 'auditoria'])">
+                    Auditoría
+                  </button>
+                  <button class="btn-action-row" (click)="router.navigate(['/tramite', t.id])">
+                    Ver Flujo
+                  </button>
+                  <button class="btn-action-row" (click)="router.navigate(['/admin/tramites', t.id, 'trazabilidad'])">
+                    Monitoreo
+                  </button>
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+
+    <!-- MODAL CREAR TRAMITE -->
+    @if (showCreateModal) {
+    <div class="modal-overlay" (click)="showCreateModal = false"
+      style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px);">
+      <div class="modal-card" (click)="$event.stopPropagation()"
+        style="background: var(--card); border-radius: 16px; padding: 32px; width: min(500px, 92vw); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); display: flex; flex-direction: column; gap: 20px; border: 1px solid var(--border);">
+
+        <!-- Header -->
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 16px;">
+          <h2 style="font-size: 20px; font-weight: 700; color: var(--text); margin: 0;">Crear nuevo trámite</h2>
+          <button
+            style="background: transparent; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center;"
+            (click)="showCreateModal = false">
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <!-- Select Politica -->
+          <div>
+            <label
+              style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Seleccionar
+              política activa</label>
+            <select [(ngModel)]="selectedPoliticaId"
+              style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--text); outline: none; transition: border-color 0.2s;">
+              <option value="" disabled selected>Seleccionar política...</option>
+              @for (p of activePolicies; track p.id) {
+              <option [value]="p.id">{{ p.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Descripción -->
+          <div>
+            <label
+              style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Descripción
+              del trámite</label>
+            <textarea [(ngModel)]="descripcion" placeholder="Describe brevemente el trámite a iniciar..." rows="3"
+              style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; color: var(--text); background: var(--bg); outline: none; resize: vertical; transition: border-color 0.2s;"></textarea>
+          </div>
+
+          <!-- Prioridad -->
+          <div>
+            <label
+              style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Prioridad</label>
+            <select [(ngModel)]="prioridad"
+              style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--text); outline: none; transition: border-color 0.2s;">
+              <option value="BAJA">Baja</option>
+              <option value="MEDIA">Normal</option>
+              <option value="ALTA">Alta</option>
+            </select>
+          </div>
+
+          <!-- Solicitante (usuario) -->
+          <div>
+            <label
+              style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Solicitante
+              (usuario)</label>
+            <select [(ngModel)]="selectedClienteId"
+              style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--text); outline: none; transition: border-color 0.2s;">
+              <option value="" disabled selected>Selecciona un usuario</option>
+              @for (u of clients; track u.id) {
+              <option [value]="u.id">{{ u.nombre }} ({{ u.email }})</option>
+              }
+            </select>
+          </div>
+
+          @if (modalError) {
+          <div
+            style="background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; padding: 10px 12px; border-radius: 8px; font-size: 13px; font-weight: 500;">
+            {{ modalError }}
+          </div>
+          }
+        </div>
+
+        <!-- Footer -->
+        <div
+          style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border); padding-top: 16px; margin-top: 8px;">
+          <button
+            style="background: var(--card); border: 1px solid var(--border); color: var(--text-muted); padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+            (click)="showCreateModal = false" [disabled]="creando">
+            Cancelar
+          </button>
+          <button
+            style="background: #2563eb; border: none; color: white; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;"
+            (click)="crearTramite()" [disabled]="creando">
+            @if (creando) { Creando... }
+            @else { Crear trámite }
+          </button>
+        </div>
+
+      </div>
+    </div>
+    }
+  </div>
+</div>

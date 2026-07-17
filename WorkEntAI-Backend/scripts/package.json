@@ -1,0 +1,10 @@
+{
+  "name": "workflow-seeder",
+  "version": "1.0.0",
+  "main": "seed.js",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.3.1",
+    "mongodb": "^6.3.0"
+  }
+}

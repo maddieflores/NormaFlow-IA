@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: workflow-engine-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    branch: main
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: GROQ_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRATION
+        value: 86400000
+      - key: FCM_ENABLED
+        value: true
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
