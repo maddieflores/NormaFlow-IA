@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../services/app_provider.dart';
 import '../agente/agente_screen.dart';
+import '../notificaciones/notificaciones_screen.dart';
 import '../tramite_detalle/tramite_detalle_screen.dart';
 
 
@@ -21,6 +22,10 @@ class _ClientePortalScreenState extends State<ClientePortalScreen>
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 2, vsync: this);
+    // Rebuild when tab changes so the FAB shows/hides correctly
+    _tabCtrl.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -32,50 +37,119 @@ class _ClientePortalScreenState extends State<ClientePortalScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF0F4FA),
       appBar: AppBar(
-        title: Consumer<AppProvider>(
-          builder: (_, p, __) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Hola, ${p.userNombre.split(' ').first} 👋',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
-                ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        titleSpacing: 16,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'Portal de Trámites',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
               ),
-              const Text(
-                'Portal de Trámites',
-                style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+            ),
+            Text(
+              'NormalFlow',
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w400,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         actions: [
           Consumer<AppProvider>(
-            builder: (_, p, __) => IconButton(
-              icon: const Icon(Icons.refresh_outlined),
-              onPressed: p.loadingData ? null : () => p.cargarDatos(),
-              tooltip: 'Actualizar',
+            builder: (_, p, __) => Stack(
+              alignment: Alignment.topRight,
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.notifications_outlined,
+                    color: Color(0xFF1E293B),
+                    size: 26,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NotificacionesScreen(),
+                      ),
+                    );
+                  },
+                ),
+                if (p.unreadCount > 0)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEF4444),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${p.unreadCount > 9 ? '9+' : p.unreadCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
+          const SizedBox(width: 4),
         ],
-        bottom: TabBar(
-          controller: _tabCtrl,
-          labelColor: const Color(0xFF2563EB),
-          unselectedLabelColor: const Color(0xFF94A3B8),
-          indicatorColor: const Color(0xFF2563EB),
-          indicatorWeight: 2.5,
-          labelStyle: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEEF2F8),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TabBar(
+              controller: _tabCtrl,
+              labelColor: const Color(0xFF1E293B),
+              unselectedLabelColor: const Color(0xFF94A3B8),
+              indicator: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              labelStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+              tabs: const [
+                Tab(text: 'Disponibles'),
+                Tab(text: 'Mis Trámites'),
+              ],
+            ),
           ),
-          tabs: const [
-            Tab(text: 'Disponibles'),
-            Tab(text: 'Mis Trámites'),
-          ],
         ),
       ),
       body: Consumer<AppProvider>(
@@ -98,23 +172,65 @@ class _ClientePortalScreenState extends State<ClientePortalScreen>
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AgenteScreen()),
-          );
-        },
-        backgroundColor: const Color(0xFF2563EB),
-        icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
-        label: const Text(
-          'Asistente IA',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // Botón Nuevo Trámite
+          Consumer<AppProvider>(
+            builder: (_, p, __) {
+              if (_tabCtrl.index == 1) {
+                return Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      // Acción nuevo trámite (definir)
+                    },
+                    icon: const Icon(Icons.add, size: 20),
+                    label: const Text(
+                      'Nuevo Trámite',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1E293B),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
           ),
-        ),
+          // Asistente IA FAB
+          FloatingActionButton.extended(
+            heroTag: 'asistente_ia_fab',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AgenteScreen()),
+              );
+            },
+            backgroundColor: const Color(0xFF2563EB),
+            icon: const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 18),
+            label: const Text(
+              'Asistente IA',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+            elevation: 4,
+          ),
+        ],
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
@@ -138,9 +254,25 @@ class _PoliticasTab extends StatelessWidget {
       color: const Color(0xFF2563EB),
       onRefresh: () => context.read<AppProvider>().cargarDatos(),
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: politicas.length,
-        itemBuilder: (_, i) => _PoliticaCard(politica: politicas[i]),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+        itemCount: politicas.length + 1,
+        itemBuilder: (_, i) {
+          if (i == 0) {
+            return const Padding(
+              padding: EdgeInsets.only(bottom: 12, top: 4),
+              child: Text(
+                'SERVICIOS PRIORITARIOS',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF94A3B8),
+                  letterSpacing: 0.8,
+                ),
+              ),
+            );
+          }
+          return _PoliticaCard(politica: politicas[i - 1]);
+        },
       ),
     );
   }
@@ -150,14 +282,39 @@ class _PoliticaCard extends StatelessWidget {
   final Politica politica;
   const _PoliticaCard({required this.politica});
 
+  // Icono y color según categoría
+  IconData _getIcon() {
+    final cat = (politica.categoria ?? '').toLowerCase();
+    if (cat.contains('medidor') || cat.contains('electric') || cat.contains('instalac')) {
+      return Icons.bolt;
+    }
+    if (cat.contains('reconex') || cat.contains('servicio')) {
+      return Icons.power;
+    }
+    if (cat.contains('document')) return Icons.description_outlined;
+    return Icons.work_outline;
+  }
+
+  Color _getIconColor() {
+    final cat = (politica.categoria ?? '').toLowerCase();
+    if (cat.contains('medidor') || cat.contains('electric') || cat.contains('instalac')) {
+      return const Color(0xFF2563EB);
+    }
+    if (cat.contains('reconex') || cat.contains('servicio')) {
+      return const Color(0xFF16A34A);
+    }
+    return const Color(0xFF2563EB);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final iconColor = _getIconColor();
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE8EFF8)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -166,109 +323,84 @@ class _PoliticaCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header con categoría
-          if (politica.categoria != null)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: const BoxDecoration(
-                color: Color(0xFFEFF6FF),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(14),
-                  topRight: Radius.circular(14),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.category_outlined,
-                      size: 14, color: Color(0xFF2563EB)),
-                  const SizedBox(width: 6),
-                  Text(
-                    politica.categoria!.toUpperCase(),
-                    style: const TextStyle(
-                      color: Color(0xFF2563EB),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  politica.nombre,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  politica.descripcion,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF64748B),
-                    height: 1.4,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 12),
-
-                // Meta info
-                Row(
-                  children: [
-                    if (politica.organizacion != null) ...[
-                      const Icon(Icons.business_outlined,
-                          size: 14, color: Color(0xFF94A3B8)),
-                      const SizedBox(width: 4),
+                // Texto principal
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        politica.organizacion!,
+                        politica.nombre,
                         style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF94A3B8),
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E293B),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                    ],
-                    if (politica.tiempoEstimadoDias != null) ...[
-                      const Icon(Icons.schedule_outlined,
-                          size: 14, color: Color(0xFF94A3B8)),
-                      const SizedBox(width: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        '~${politica.tiempoEstimadoDias} días',
+                        politica.descripcion,
                         style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF94A3B8),
+                          fontSize: 13,
+                          color: Color(0xFF64748B),
+                          height: 1.4,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                  ],
-                ),
-                const SizedBox(height: 14),
-
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _mostrarDialogoSolicitar(context),
-                    icon: const Icon(Icons.send_outlined, size: 18),
-                    label: const Text('Solicitar Trámite'),
                   ),
+                ),
+                const SizedBox(width: 12),
+                // Icono circular
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(_getIcon(), color: iconColor, size: 20),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            // Tags
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                if (politica.organizacion != null)
+                  _Tag(label: politica.organizacion!.toUpperCase()),
+                if (politica.tiempoEstimadoDias != null)
+                  _Tag(label: '~${politica.tiempoEstimadoDias} DÍAS'),
+                if (politica.categoria != null)
+                  _Tag(label: politica.categoria!.toUpperCase()),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // CTA
+            GestureDetector(
+              onTap: () => _mostrarDialogoSolicitar(context),
+              child: const Text(
+                'INICIAR GESTIÓN →',
+                style: TextStyle(
+                  color: Color(0xFF2563EB),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.4,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -282,6 +414,32 @@ class _PoliticaCard extends StatelessWidget {
       builder: (_) => _SolicitarSheet(
         politica: politica,
         descCtrl: descCtrl,
+      ),
+    );
+  }
+}
+
+class _Tag extends StatelessWidget {
+  final String label;
+  const _Tag({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF475569),
+          letterSpacing: 0.3,
+        ),
       ),
     );
   }
@@ -355,7 +513,6 @@ class _SolicitarSheetState extends State<_SolicitarSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Handle
             Center(
               child: Container(
                 width: 40,
@@ -367,7 +524,6 @@ class _SolicitarSheetState extends State<_SolicitarSheet> {
               ),
             ),
             const SizedBox(height: 20),
-
             Text(
               widget.politica.nombre,
               style: const TextStyle(
@@ -382,7 +538,6 @@ class _SolicitarSheetState extends State<_SolicitarSheet> {
               style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
             ),
             const SizedBox(height: 20),
-
             const Text(
               'Descripción / Motivo (opcional)',
               style: TextStyle(
@@ -400,7 +555,6 @@ class _SolicitarSheetState extends State<_SolicitarSheet> {
                 hintText: 'Describe brevemente el motivo de tu solicitud...',
               ),
             ),
-
             if (_error.isNotEmpty) ...[
               const SizedBox(height: 12),
               Container(
@@ -419,7 +573,6 @@ class _SolicitarSheetState extends State<_SolicitarSheet> {
                 ),
               ),
             ],
-
             const SizedBox(height: 20),
             Row(
               children: [
@@ -479,7 +632,6 @@ class _TramitesTab extends StatelessWidget {
       );
     }
 
-    // Separar activos y completados
     final activos = tramites
         .where((t) => t.estado != 'COMPLETADO' && t.estado != 'RECHAZADO')
         .toList();
@@ -491,17 +643,37 @@ class _TramitesTab extends StatelessWidget {
       color: const Color(0xFF2563EB),
       onRefresh: () => context.read<AppProvider>().cargarDatos(),
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
         children: [
           if (activos.isNotEmpty) ...[
-            const _SectionHeader(title: 'En curso', icon: '⏳'),
-            const SizedBox(height: 8),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12, top: 4),
+              child: Text(
+                'TRÁMITES RECIENTES',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF94A3B8),
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ),
             ...activos.map((t) => _TramiteCard(tramite: t)),
             const SizedBox(height: 16),
           ],
           if (finalizados.isNotEmpty) ...[
-            const _SectionHeader(title: 'Finalizados', icon: '✅'),
-            const SizedBox(height: 8),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: Text(
+                'FINALIZADOS',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF94A3B8),
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ),
             ...finalizados.map((t) => _TramiteCard(tramite: t)),
           ],
         ],
@@ -510,33 +682,12 @@ class _TramitesTab extends StatelessWidget {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final String icon;
-  const _SectionHeader({required this.title, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(icon, style: const TextStyle(fontSize: 16)),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF475569),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _TramiteCard extends StatelessWidget {
   final Tramite tramite;
   const _TramiteCard({required this.tramite});
+
+  bool get _isActive =>
+      tramite.estado != 'COMPLETADO' && tramite.estado != 'RECHAZADO';
 
   @override
   Widget build(BuildContext context) {
@@ -550,210 +701,132 @@ class _TramiteCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          color: _isActive ? const Color(0xFF0F172A) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: _isActive
+              ? null
+              : Border.all(color: const Color(0xFFE2E8F0)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: Colors.black.withValues(alpha: _isActive ? 0.15 : 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Column(
-          children: [
-            // Barra de estado superior
-            Container(
-              height: 4,
-              decoration: BoxDecoration(
-                color: tramite.estadoColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(14),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header: badge estado + ID
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Referencia
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          tramite.refDisplay,
-                          style: const TextStyle(
-                            color: Color(0xFF2563EB),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            fontFamily: 'monospace',
-                          ),
-                        ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _isActive
+                          ? const Color(0xFF1D4ED8)
+                          : tramite.estadoColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      tramite.estadoLabel.toUpperCase(),
+                      style: TextStyle(
+                        color: _isActive ? Colors.white : tramite.estadoColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.4,
                       ),
-                      // Badge estado
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: tramite.estadoColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(tramite.estadoEmoji,
-                                style: const TextStyle(fontSize: 11)),
-                            const SizedBox(width: 4),
-                            Text(
-                              tramite.estadoLabel,
-                              style: TextStyle(
-                                color: tramite.estadoColor,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 10),
-
                   Text(
-                    tramite.nombrePolitica ?? 'Trámite',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1E293B),
+                    'ID: ${tramite.refDisplay}',
+                    style: TextStyle(
+                      color: _isActive
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF94A3B8),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-
-                  if (tramite.descripcion != null &&
-                      tramite.descripcion!.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      tramite.descripcion!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF64748B),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-
-                  const SizedBox(height: 10),
-
-                  // Info row
-                  Row(
-                    children: [
-                      if (tramite.estado == 'EN_PROCESO' &&
-                          tramite.nombreNodoActual != null) ...[
-                        const Icon(Icons.location_on_outlined,
-                            size: 13, color: Color(0xFF94A3B8)),
-                        const SizedBox(width: 3),
-                        Expanded(
-                          child: Text(
-                            '${tramite.departamentoActual ?? ''} · ${tramite.nombreNodoActual}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF64748B),
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ] else ...[
-                        const Icon(Icons.calendar_today_outlined,
-                            size: 13, color: Color(0xFF94A3B8)),
-                        const SizedBox(width: 3),
-                        Text(
-                          tramite.fechaInicioFormatted,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF94A3B8),
-                          ),
-                        ),
-                        if (tramite.estado == 'COMPLETADO' &&
-                            tramite.duracionMinutos != null) ...[
-                          const SizedBox(width: 10),
-                          const Icon(Icons.timer_outlined,
-                              size: 13, color: Color(0xFF94A3B8)),
-                          const SizedBox(width: 3),
-                          Text(
-                            tramite.duracionFormatted,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF94A3B8),
-                            ),
-                          ),
-                        ],
-                      ],
-                      const Spacer(),
-                      const Icon(Icons.chevron_right,
-                          size: 18, color: Color(0xFFCBD5E1)),
-                    ],
-                  ),
-
-                  // Progreso visual para EN_PROCESO
-                  if (tramite.estado == 'EN_PROCESO' &&
-                      tramite.historial.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    _buildMiniProgress(tramite),
-                  ],
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+              const SizedBox(height: 10),
+              Text(
+                tramite.nombrePolitica ?? 'Trámite',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _isActive ? Colors.white : const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today_outlined,
+                    size: 12,
+                    color: _isActive
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF94A3B8),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Iniciado: ${tramite.fechaInicioFormatted}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _isActive
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
 
-  Widget _buildMiniProgress(Tramite tramite) {
-    final completados = tramite.historial.length;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              '$completados paso${completados != 1 ? 's' : ''} completado${completados != 1 ? 's' : ''}',
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF64748B),
-              ),
-            ),
-            const Text(
-              'En progreso',
-              style: TextStyle(
-                fontSize: 11,
-                color: Color(0xFFF59E0B),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: completados > 0 ? (completados / (completados + 2)) : 0.1,
-            backgroundColor: const Color(0xFFE2E8F0),
-            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFF59E0B)),
-            minHeight: 5,
+              // Progress bar for active tramites
+              if (_isActive && tramite.historial.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Progreso',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: _isActive
+                            ? const Color(0xFF94A3B8)
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                    Text(
+                      '${((tramite.historial.length / (tramite.historial.length + 2)) * 100).round()}%',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF94A3B8),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: tramite.historial.length > 0
+                        ? (tramite.historial.length / (tramite.historial.length + 2))
+                        : 0.1,
+                    backgroundColor: const Color(0xFF1E3A5F),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+                    minHeight: 5,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -798,24 +871,12 @@ class _ErrorView extends StatelessWidget {
           children: [
             const Text('⚠️', style: TextStyle(fontSize: 48)),
             const SizedBox(height: 16),
-            const Text(
-              'No se pudo cargar',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
-              ),
-            ),
-            const SizedBox(height: 8),
             Text(
               error,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Color(0xFF64748B),
-                fontSize: 13,
-              ),
+              style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh, size: 18),
@@ -832,8 +893,11 @@ class _EmptyView extends StatelessWidget {
   final String icon;
   final String title;
   final String subtitle;
-  const _EmptyView(
-      {required this.icon, required this.title, required this.subtitle});
+  const _EmptyView({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
 
   @override
   Widget build(BuildContext context) {

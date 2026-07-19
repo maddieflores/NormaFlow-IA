@@ -27,7 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AppProvider>().cargarDatos();
-      // Registrar handler de navegación para notificaciones push (CU-14)
       _registrarNavHandler();
     });
   }
@@ -38,13 +37,15 @@ class _HomeScreenState extends State<HomeScreen> {
       switch (tipo) {
         case 'NUEVA_TAREA':
         case 'TAREA_ASIGNADA':
-          // Ir a la pestaña de notificaciones para que el usuario vea la nueva tarea
-          setState(() => _currentIndex = 1);
+          // Navegar a notificaciones como pantalla separada
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const NotificacionesScreen()),
+          );
           break;
         case 'TRAMITE_COMPLETADO':
         case 'TRAMITE_ACTUALIZADO':
         case 'TAREA_COMPLETADA':
-          // Navegar al detalle del trámite si tenemos el ID
           if (referenciaId.isNotEmpty) {
             Navigator.of(context).push(
               MaterialPageRoute(
@@ -54,15 +55,16 @@ class _HomeScreenState extends State<HomeScreen> {
           }
           break;
         default:
-          // Ir a notificaciones como fallback
-          setState(() => _currentIndex = 1);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const NotificacionesScreen()),
+          );
       }
     });
   }
 
   @override
   void dispose() {
-    // Limpiar handler al salir para evitar memory leaks
     NotificationService.clearNavigationHandler();
     super.dispose();
   }
@@ -93,8 +95,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   builder: (_) => TareaDetalleScreen(
                     tarea: tarea,
                     onCompletado: () {
-                      Navigator.pop(context); // Regresar al dashboard
-                      context.read<AppProvider>().cargarDatos(); // Recargar las tareas
+                      Navigator.pop(context);
+                      context.read<AppProvider>().cargarDatos();
                     },
                   ),
                 ),
@@ -110,9 +112,9 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
 
+        // ── CLIENTE: solo 2 tabs (Trámites, Perfil) ──────────────
         final pages = [
           const ClientePortalScreen(),
-          const NotificacionesScreen(),
           const PerfilScreen(),
         ];
 
@@ -139,74 +141,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               unselectedLabelStyle: const TextStyle(fontSize: 11),
               elevation: 0,
-              items: [
-                const BottomNavigationBarItem(
-                  icon: Icon(Icons.home_outlined),
-                  activeIcon: Icon(Icons.home),
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.description_outlined),
+                  activeIcon: Icon(Icons.description),
                   label: 'Trámites',
                 ),
                 BottomNavigationBarItem(
-                  icon: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      const Icon(Icons.notifications_outlined),
-                      if (provider.unreadCount > 0)
-                        Positioned(
-                          top: -4,
-                          right: -4,
-                          child: Container(
-                            width: 16,
-                            height: 16,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFEF4444),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${provider.unreadCount > 9 ? '9+' : provider.unreadCount}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  activeIcon: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      const Icon(Icons.notifications),
-                      if (provider.unreadCount > 0)
-                        Positioned(
-                          top: -4,
-                          right: -4,
-                          child: Container(
-                            width: 16,
-                            height: 16,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFEF4444),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${provider.unreadCount > 9 ? '9+' : provider.unreadCount}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  label: 'Notificaciones',
-                ),
-                const BottomNavigationBarItem(
                   icon: Icon(Icons.person_outline),
                   activeIcon: Icon(Icons.person),
                   label: 'Perfil',

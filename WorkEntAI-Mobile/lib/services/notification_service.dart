@@ -22,7 +22,7 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   static const _channelId = 'workentai_channel';
-  static const _channelName = 'WorkEntAI Notificaciones';
+  static const _channelName = 'NormalFlow Notificaciones';
   static const _channelDesc = 'Notificaciones de trámites y tareas';
 
   /// Inicializar Firebase + FCM + notificaciones locales
@@ -122,7 +122,7 @@ class NotificationService {
 
     if (notification == null) return;
 
-    final title = notification.title ?? 'WorkEntAI';
+    final title = notification.title ?? 'NormalFlow';
     final body = notification.body ?? '';
     final tipo = message.data['tipo'] ?? 'SISTEMA';
 

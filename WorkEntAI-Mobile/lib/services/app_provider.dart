@@ -23,6 +23,7 @@ class AppProvider extends ChangeNotifier {
   List<Tramite> _tramites = [];
   List<Tarea> _tareas = [];
   List<Notificacion> _notificaciones = [];
+  List<Map<String, dynamic>> _usuariosAdmin = [];
 
   bool _loadingAuth = false;
   bool _loadingData = false;
@@ -33,6 +34,8 @@ class AppProvider extends ChangeNotifier {
   String _actionError = '';
   String _actionSuccess = '';
   bool _isOffline = false;
+  bool _darkMode = false;
+  bool _notificationsEnabled = true;
 
 
   // ── Getters ───────────────────────────────────────────────────
@@ -42,6 +45,18 @@ class AppProvider extends ChangeNotifier {
   String get userEmail => _user?['email'] ?? '';
   String get userRol => _user?['rol'] ?? '';
   String get userDepartamento => _user?['departamento'] ?? '';
+  bool get darkMode => _darkMode;
+  bool get notificationsEnabled => _notificationsEnabled;
+
+  void toggleDarkMode(bool value) {
+    _darkMode = value;
+    notifyListeners();
+  }
+
+  void toggleNotifications(bool value) {
+    _notificationsEnabled = value;
+    notifyListeners();
+  }
 
   List<Politica> get politicas => _politicas;
   List<Tramite> get tramites => _tramites;
@@ -59,6 +74,7 @@ class AppProvider extends ChangeNotifier {
       _tareas.where((t) => t.estado == 'COMPLETADO').toList();
 
   List<Notificacion> get notificaciones => _notificaciones;
+  List<Map<String, dynamic>> get usuariosAdmin => _usuariosAdmin;
   int get unreadCount => _notificaciones.where((n) => !n.leida).length;
 
   bool get loadingAuth => _loadingAuth;
@@ -111,6 +127,7 @@ class AppProvider extends ChangeNotifier {
     _tramites = [];
     _tareas = [];
     _notificaciones = [];
+    _usuariosAdmin = [];
     _authError = '';
     _dataError = '';
     notifyListeners();
@@ -156,6 +173,14 @@ class AppProvider extends ChangeNotifier {
           ]);
           _tareas = results[0] as List<Tarea>;
           _notificaciones = results[1] as List<Notificacion>;
+          // Para ADMIN cargar lista de usuarios del sistema
+          if (rol == 'ADMIN') {
+            try {
+              _usuariosAdmin = await _apiService.getUsuarios();
+            } catch (_) {
+              // Si falla no bloqueamos la carga
+            }
+          }
         }
       } else {
         _isOffline = true;

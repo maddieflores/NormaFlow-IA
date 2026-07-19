@@ -16,10 +16,10 @@ import java.util.Map;
  * REST Controller del Agente Inteligente de Atención al Cliente (CU-22/23).
  *
  * Endpoints:
- *   POST /api/agente/sesion              — iniciar/retomar sesión de diálogo
- *   POST /api/agente/sesion/{id}/mensaje — enviar mensaje y obtener respuesta
- *   GET  /api/agente/sesion/{id}         — obtener estado actual de la sesión
- *   DELETE /api/agente/sesion/{id}       — cerrar sesión manualmente
+ * POST /api/agente/sesion — iniciar/retomar sesión de diálogo
+ * POST /api/agente/sesion/{id}/mensaje — enviar mensaje y obtener respuesta
+ * GET /api/agente/sesion/{id} — obtener estado actual de la sesión
+ * DELETE /api/agente/sesion/{id} — cerrar sesión manualmente
  *
  * Principio SRP: solo orquesta HTTP; la lógica está en AgenteService.
  */

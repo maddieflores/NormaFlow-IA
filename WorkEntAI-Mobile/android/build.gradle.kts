@@ -1,8 +1,5 @@
 // Nivel de proyecto: build.gradle.kts
-plugins {
-    // Plugin de Google Services para Firebase (apply false = solo declarar, no aplicar aquí)
-    id("com.google.gms.google-services") version "4.4.4" apply false
-}
+// Nota: com.google.gms.google-services ya está declarado en settings.gradle.kts
 
 allprojects {
     repositories {

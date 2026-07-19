@@ -335,5 +335,17 @@ class ApiService {
     if (res.statusCode == 200) return jsonDecode(res.body);
     throw Exception(_errorMsg(res));
   }
+
+  Future<List<Map<String, dynamic>>> getUsuarios() async {
+    final res = await http.get(
+      Uri.parse('${AppConfig.baseUrl}/usuarios'),
+      headers: await _headers(),
+    );
+    if (res.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(res.body);
+      return data.map((j) => Map<String, dynamic>.from(j)).toList();
+    }
+    throw Exception(_errorMsg(res));
+  }
 }
 

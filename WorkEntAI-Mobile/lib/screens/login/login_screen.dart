@@ -54,37 +54,37 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 56),
+                const SizedBox(height: 48),
 
                 // ── Logo ──────────────────────────────────────
                 Center(
                   child: Column(
                     children: [
                       Container(
-                        width: 80,
-                        height: 80,
+                        width: 76,
+                        height: 76,
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF2563EB), Color(0xFF7C3AED)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(22),
+                          color: const Color(0xFF1E3A8A),
+                          borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF2563EB).withValues(alpha: 0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
+                              color: const Color(0xFF1E3A8A).withValues(alpha: 0.25),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
                         child: const Center(
-                          child: Text('⚡', style: TextStyle(fontSize: 38)),
+                          child: Icon(
+                            Icons.bolt,
+                            color: Colors.white,
+                            size: 40,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
                       const Text(
-                        'WorkEntAI',
+                        'NormalFlow',
                         style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
@@ -104,213 +104,190 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // ── Card login ────────────────────────────────
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                // Email
+                const Text(
+                  'CORREO ELECTRÓNICO',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF64748B),
+                    letterSpacing: 0.6,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Text(
-                        'Iniciar Sesión',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Email
-                      const Text(
-                        'Correo electrónico',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF475569),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _emailCtrl,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF1E293B),
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: 'usuario@empresa.com',
-                          prefixIcon: Icon(
-                            Icons.email_outlined,
-                            size: 20,
-                            color: Color(0xFF94A3B8),
-                          ),
-                        ),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return 'Ingresa tu correo';
-                          if (!v.contains('@')) return 'Correo inválido';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Password
-                      const Text(
-                        'Contraseña',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF475569),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _passCtrl,
-                        obscureText: _obscure,
-                        textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _login(),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF1E293B),
-                        ),
-                        decoration: InputDecoration(
-                          hintText: '••••••••',
-                          prefixIcon: const Icon(
-                            Icons.lock_outline,
-                            size: 20,
-                            color: Color(0xFF94A3B8),
-                          ),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscure
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                              size: 20,
-                              color: const Color(0xFF94A3B8),
-                            ),
-                            onPressed: () =>
-                                setState(() => _obscure = !_obscure),
-                          ),
-                        ),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return 'Ingresa tu contraseña';
-                          if (v.length < 4) return 'Contraseña muy corta';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Error
-                      Consumer<AppProvider>(
-                        builder: (_, p, __) => p.authError.isNotEmpty
-                            ? Container(
-                                margin: const EdgeInsets.only(bottom: 16),
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFEF2F2),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                      color: const Color(0xFFFECACA)),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.error_outline,
-                                        color: Color(0xFFEF4444), size: 18),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        p.authError,
-                                        style: const TextStyle(
-                                          color: Color(0xFFDC2626),
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : const SizedBox(),
-                      ),
-
-                      // Botón
-                      Consumer<AppProvider>(
-                        builder: (_, p, __) => SizedBox(
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: p.loadingAuth ? null : _login,
-                            child: p.loadingAuth
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text('Ingresar'),
-                          ),
-                        ),
-                      ),
-                    ],
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF1E293B),
                   ),
+                  decoration: const InputDecoration(
+                    hintText: 'usuario@empresa.com',
+                    prefixIcon: Icon(
+                      Icons.email_outlined,
+                      size: 20,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Ingresa tu correo';
+                    if (!v.contains('@')) return 'Correo inválido';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 20),
 
-                // ── Cuentas de prueba ─────────────────────────
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0F9FF),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFBAE6FD)),
+                // Password
+                const Text(
+                  'CONTRASEÑA',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF64748B),
+                    letterSpacing: 0.6,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.people_outline, size: 18, color: Color(0xFF0369A1)),
-                          SizedBox(width: 8),
-                          Text(
-                            'Modo Desarrollo',
-                            style: TextStyle(
-                              color: Color(0xFF0369A1),
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _passCtrl,
+                  obscureText: _obscure,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _login(),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF1E293B),
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '••••••••',
+                    prefixIcon: const Icon(
+                      Icons.lock_outline,
+                      size: 20,
+                      color: Color(0xFF94A3B8),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscure
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        size: 20,
+                        color: const Color(0xFF94A3B8),
                       ),
-                      const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF0369A1),
-                          elevation: 0,
-                          side: const BorderSide(color: Color(0xFFBAE6FD)),
-                          shape: RoundedRectangleBorder(
+                      onPressed: () =>
+                          setState(() => _obscure = !_obscure),
+                    ),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Ingresa tu contraseña';
+                    if (v.length < 4) return 'Contraseña muy corta';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 28),
+
+                // Error
+                Consumer<AppProvider>(
+                  builder: (_, p, __) => p.authError.isNotEmpty
+                      ? Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF2F2),
                             borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                                color: const Color(0xFFFECACA)),
                           ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.error_outline,
+                                  color: Color(0xFFEF4444), size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  p.authError,
+                                  style: const TextStyle(
+                                    color: Color(0xFFDC2626),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : const SizedBox(),
+                ),
+
+                // Botón Ingresar
+                Consumer<AppProvider>(
+                  builder: (_, p, __) => SizedBox(
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: p.loadingAuth ? null : _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1E3A8A),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        icon: const Icon(Icons.list_alt, size: 18),
-                        label: const Text('Ver Usuarios de Prueba'),
-                        onPressed: _mostrarUsuariosDemo,
+                        elevation: 0,
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ],
+                      child: p.loadingAuth
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text('Ingresar'),
+                    ),
                   ),
+                ),
+                const SizedBox(height: 48),
+
+                // ── MODO DESARROLLO ───────────────────────────
+                const Divider(color: Color(0xFFE2E8F0)),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.people_outline, size: 14, color: Color(0xFF94A3B8)),
+                    SizedBox(width: 6),
+                    Text(
+                      'MODO DESARROLLO',
+                      style: TextStyle(
+                        color: Color(0xFF94A3B8),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF475569),
+                    elevation: 0,
+                    side: const BorderSide(color: Color(0xFFE2E8F0)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  icon: const Icon(Icons.list_alt, size: 18),
+                  label: const Text(
+                    'Ver Usuarios de Prueba',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  onPressed: _mostrarUsuariosDemo,
                 ),
                 const SizedBox(height: 32),
               ],

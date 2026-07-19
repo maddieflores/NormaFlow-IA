@@ -288,9 +288,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // ── Stats ─────────────────────────────────────
+                // ── Preferencias ──────────────────────────────────────
                 Container(
-                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
@@ -299,33 +298,106 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Mis Trámites',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
+                      const Padding(
+                        padding:
+                            EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        child: Text(
+                          'Preferencias',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E293B),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          _buildStatItem(
-                            '${provider.tramites.length}',
-                            'Total',
-                            const Color(0xFF2563EB),
+                      const Divider(height: 1, color: Color(0xFFE2E8F0)),
+
+                      // Toggle modo oscuro
+                      Consumer<AppProvider>(
+                        builder: (_, p, __) => SwitchListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 4),
+                          secondary: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E293B).withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              p.darkMode
+                                  ? Icons.dark_mode_rounded
+                                  : Icons.light_mode_rounded,
+                              color: const Color(0xFF1E293B),
+                              size: 20,
+                            ),
                           ),
-                          _buildStatItem(
-                            '${provider.tramitesActivos.length}',
-                            'Activos',
-                            const Color(0xFFF59E0B),
+                          title: Text(
+                            p.darkMode ? 'Modo Oscuro' : 'Modo Claro',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1E293B),
+                            ),
                           ),
-                          _buildStatItem(
-                            '${provider.tramitesCompletados.length}',
-                            'Completados',
-                            const Color(0xFF22C55E),
+                          subtitle: Text(
+                            p.darkMode
+                                ? 'Cambiar a interfaz clara'
+                                : 'Cambiar a interfaz oscura',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF94A3B8),
+                            ),
                           ),
-                        ],
+                          value: p.darkMode,
+                          activeThumbColor: const Color(0xFF2563EB),
+                          onChanged: (val) => p.toggleDarkMode(val),
+                        ),
+                      ),
+
+                      const Divider(height: 1, color: Color(0xFFE2E8F0)),
+
+                      // Toggle notificaciones
+                      Consumer<AppProvider>(
+                        builder: (_, p, __) => SwitchListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 4),
+                          secondary: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2563EB).withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              p.notificationsEnabled
+                                  ? Icons.notifications_active_rounded
+                                  : Icons.notifications_off_rounded,
+                              color: const Color(0xFF2563EB),
+                              size: 20,
+                            ),
+                          ),
+                          title: const Text(
+                            'Notificaciones',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          subtitle: Text(
+                            p.notificationsEnabled
+                                ? 'Recibirás alertas de tus trámites'
+                                : 'Las notificaciones están silenciadas',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF94A3B8),
+                            ),
+                          ),
+                          value: p.notificationsEnabled,
+                          activeThumbColor: const Color(0xFF2563EB),
+                          onChanged: (val) => p.toggleNotifications(val),
+                        ),
                       ),
                     ],
                   ),
@@ -351,7 +423,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'WorkEntAI v1.0.0',
+                  'NormalFlow v1.0.0',
                   style: TextStyle(
                     color: Color(0xFFCBD5E1),
                     fontSize: 11,
@@ -362,31 +434,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildStatItem(String value, String label, Color color) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFF94A3B8),
-            ),
-          ),
-        ],
       ),
     );
   }
