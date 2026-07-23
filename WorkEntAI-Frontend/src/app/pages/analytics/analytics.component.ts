@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { AIService } from '../../services/ai/ai.service';
 import { PoliticaService } from '../../services/politica/politica.service';
+import { DepartamentoService } from '../../services/departamento/departamento.service';
 import { SidebarComponent, NavItem, ADMIN_NAV_ITEMS } from '../../components/sidebar/sidebar.component';
 import { Politica } from '../../models/models';
 import { HttpClient } from '@angular/common/http';
@@ -244,8 +245,8 @@ import { environment } from '../../../environments/environment';
                   [(ngModel)]="deptSeleccionado" 
                   (change)="cargarEficiencia()">
                   <option value="">Seleccionar departamento a analizar...</option>
-                  @for (key of objectKeys(promediosDept); track key) {
-                    <option [value]="key">{{ key }}</option>
+                  @for (dept of departamentos; track dept.id) {
+                    <option [value]="dept.nombre">{{ dept.nombre }}</option>
                   }
                 </select>
               </div>
@@ -313,6 +314,7 @@ export class AnalyticsComponent implements OnInit {
   eficiencia: any[] = [];
   kpis: any = null;
   anomalias: any[] = [];
+  departamentos: any[] = [];
   loadingAnalisis = false;
   loadingDept = false;
   loadingAnomalias = false;
@@ -322,6 +324,7 @@ export class AnalyticsComponent implements OnInit {
   constructor(
     private aiService: AIService,
     private politicaService: PoliticaService,
+    private departamentoService: DepartamentoService,
     private http: HttpClient,
     public router: Router
   ) { }
@@ -329,6 +332,9 @@ export class AnalyticsComponent implements OnInit {
   ngOnInit(): void {
     this.politicaService.getAll().pipe(catchError(() => of([]))).subscribe(p => {
       this.politicas = p;
+    });
+    this.departamentoService.getAll().pipe(catchError(() => of([]))).subscribe(depts => {
+      this.departamentos = depts;
     });
     this.cargarPromediosDept();
     this.cargarKpis();

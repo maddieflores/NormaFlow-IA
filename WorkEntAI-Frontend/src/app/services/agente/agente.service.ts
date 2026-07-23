@@ -32,8 +32,9 @@ export interface MensajeDialogo {
 export class AgenteService {
 
   private readonly base = `${environment.apiUrl}/agente`;
+  public archivosPendientesDemo: File[] = [];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   iniciarSesion(): Observable<AgenteSession> {
     return this.http.post<AgenteSession>(`${this.base}/sesion`, {});
@@ -50,5 +51,22 @@ export class AgenteService {
 
   cerrarSesion(sessionId: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/sesion/${sessionId}`);
+  }
+
+  iniciarSesionDemo(): Observable<AgenteSession> {
+    return this.http.post<AgenteSession>(`${this.base}/demo/sesion`, {});
+  }
+
+  enviarMensajeDemo(sessionId: string, mensaje: string): Observable<AgenteSession> {
+    return this.http.post<AgenteSession>(
+      `${this.base}/demo/sesion/${sessionId}/mensaje`, { mensaje });
+  }
+
+  cerrarSesionDemo(sessionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/demo/sesion/${sessionId}`);
+  }
+
+  reclamarSesion(sessionId: string): Observable<AgenteSession> {
+    return this.http.post<AgenteSession>(`${this.base}/sesion/reclamar/${sessionId}`, {});
   }
 }

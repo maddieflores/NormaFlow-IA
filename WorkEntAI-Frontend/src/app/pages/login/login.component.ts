@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth/auth.service';
+import { AgenteService } from '../../services/agente/agente.service';
+import { DocumentoService } from '../../services/documento/documento.service';
 
 @Component({
   selector: 'app-login',
@@ -92,15 +94,26 @@ import { AuthService } from '../../services/auth/auth.service';
                   </div>
                 </div>
 
-                <h2 class="form-title">Iniciar Sesión</h2>
-                <p class="form-subtitle">Ingresa tus credenciales para continuar</p>
+                <h2 class="form-title">{{ isRegisterMode ? 'Crear Cuenta' : 'Iniciar Sesión' }}</h2>
+                <p class="form-subtitle">{{ isRegisterMode ? 'Regístrate para simular e iniciar tus trámites' : 'Ingresa tus credenciales para continuar' }}</p>
+
+                <!-- Nombre (Solo en modo registro) -->
+                @if (isRegisterMode) {
+                  <div class="field">
+                    <label>Nombre Completo</label>
+                    <div class="input-wrap">
+                      <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      <input id="register-name" type="text" [(ngModel)]="nombre" placeholder="Juan Pérez" class="input-field" (keydown.enter)="onSubmit()" />
+                    </div>
+                  </div>
+                }
 
                 <!-- Email -->
                 <div class="field">
                   <label>Correo Electrónico</label>
                   <div class="input-wrap">
                     <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                    <input id="login-email" type="email" [(ngModel)]="email" placeholder="usuario@cotasenergy.com" class="input-field" (keydown.enter)="login()" />
+                    <input id="login-email" type="email" [(ngModel)]="email" placeholder="usuario@cotasenergy.com" class="input-field" (keydown.enter)="onSubmit()" />
                   </div>
                 </div>
 
@@ -109,7 +122,7 @@ import { AuthService } from '../../services/auth/auth.service';
                   <label>Contraseña</label>
                   <div class="input-wrap">
                     <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    <input id="login-password" type="password" [(ngModel)]="password" placeholder="••••••••" class="input-field" (keydown.enter)="login()" />
+                    <input id="login-password" type="password" [(ngModel)]="password" placeholder="••••••••" class="input-field" (keydown.enter)="onSubmit()" />
                   </div>
                 </div>
 
@@ -119,17 +132,17 @@ import { AuthService } from '../../services/auth/auth.service';
                 }
 
                 <!-- Submit -->
-                <button id="login-submit" class="btn-login" (click)="login()" [disabled]="loading">
+                <button id="login-submit" class="btn-login" (click)="onSubmit()" [disabled]="loading">
                   @if (loading) {
-                    <span class="spinner"></span> Iniciando...
+                    <span class="spinner"></span> {{ isRegisterMode ? 'Registrando...' : 'Iniciando...' }}
                   } @else {
-                    Ingresar
+                    {{ isRegisterMode ? 'Crear Cuenta' : 'Ingresar' }}
                   }
                 </button>
 
                 <p class="forgot">
-                  ¿Olvidaste tu contraseña?
-                  <span class="forgot-link">Recuperar</span>
+                  {{ isRegisterMode ? '¿Ya tienes una cuenta?' : '¿No tienes una cuenta?' }}
+                  <span class="forgot-link" (click)="toggleMode()">{{ isRegisterMode ? 'Iniciar Sesión' : 'Registrarse' }}</span>
                 </p>
 
                 <div class="back-link" (click)="router.navigate(['/'])">
@@ -444,30 +457,134 @@ import { AuthService } from '../../services/auth/auth.service';
 export class LoginComponent {
   email = '';
   password = '';
+  nombre = '';
   loading = false;
   error = '';
+  isRegisterMode = false;
 
-  constructor(private authService: AuthService, public router: Router) { }
+  constructor(
+    private authService: AuthService,
+    private agenteService: AgenteService,
+    private documentoService: DocumentoService,
+    public router: Router
+  ) { }
 
-  login() {
+  toggleMode() {
+    this.isRegisterMode = !this.isRegisterMode;
+    this.error = '';
+    this.email = '';
+    this.password = '';
+    this.nombre = '';
+  }
+
+  onSubmit() {
+    if (this.isRegisterMode) {
+      this.doRegister();
+    } else {
+      this.doLogin();
+    }
+  }
+
+  doLogin() {
     this.loading = true;
     this.error = '';
 
     this.authService.login(this.email, this.password).subscribe({
       next: (res) => {
         this.loading = false;
-        if (res.rol === 'ADMIN') {
-          this.router.navigate(['/admin']);
-        } else if (res.rol === 'FUNCIONARIO') {
-          this.router.navigate(['/dashboard']);
-        } else {
-          this.router.navigate(['/cliente']);
-        }
+        this.handleLoginSuccess(res);
       },
       error: (err) => {
         this.error = err.error?.message || 'Email o contraseña incorrectos';
         this.loading = false;
       }
     });
+  }
+
+  doRegister() {
+    if (!this.nombre.trim() || !this.email.trim() || !this.password.trim()) {
+      this.error = 'Todos los campos son obligatorios';
+      return;
+    }
+
+    this.loading = true;
+    this.error = '';
+
+    const registerData = {
+      nombre: this.nombre,
+      email: this.email,
+      password: this.password,
+      rol: 'CLIENTE',
+      departamento: 'Externo'
+    };
+
+    this.authService.register(registerData).subscribe({
+      next: (res) => {
+        // Al registrarse exitosamente, el backend retorna AuthResponse (con token, etc.)
+        // Guardamos las credenciales y el token en localStorage como un login normal
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('user', JSON.stringify(res));
+
+        this.loading = false;
+        this.handleLoginSuccess(res);
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'Error al crear la cuenta';
+        this.loading = false;
+      }
+    });
+  }
+
+  private handleLoginSuccess(res: any) {
+    if (res.rol === 'ADMIN') {
+      this.router.navigate(['/admin']);
+    } else if (res.rol === 'FUNCIONARIO') {
+      this.router.navigate(['/dashboard']);
+    } else {
+      // Si es un cliente y tiene una sesión demo guardada, la reclamamos
+      const demoSessionId = localStorage.getItem('demo_session_id');
+      if (demoSessionId) {
+        this.agenteService.reclamarSesion(demoSessionId).subscribe({
+          next: (sesionActualizada) => {
+            localStorage.removeItem('demo_session_id');
+            if (sesionActualizada.tramiteId) {
+              // Subir los archivos acumulados durante la demo
+              const archivos = this.agenteService.archivosPendientesDemo;
+              if (archivos && archivos.length > 0) {
+                archivos.forEach(archivo => {
+                  this.documentoService.subirDocumento(
+                    sesionActualizada.tramiteId!,
+                    archivo,
+                    undefined,
+                    `Subido por IA (Demo Reclamada): ${archivo.name}`
+                  ).subscribe({
+                    next: () => console.log('Documento demo subido con éxito:', archivo.name),
+                    error: (err) => console.error('Error al subir documento demo:', archivo.name, err)
+                  });
+                });
+                this.agenteService.archivosPendientesDemo = []; // Limpiar
+              }
+
+              // Redirigir directamente al nuevo trámite creado
+              this.router.navigate(['/tramite', sesionActualizada.tramiteId]);
+            } else {
+              this.router.navigate(['/cliente']);
+            }
+          },
+          error: (err) => {
+            console.error('Error al reclamar la sesión demo:', err);
+            localStorage.removeItem('demo_session_id');
+            this.router.navigate(['/cliente']);
+          }
+        });
+      } else {
+        this.router.navigate(['/cliente']);
+      }
+    }
+  }
+
+  // Alias para mantener compatibilidad si es necesario
+  login() {
+    this.onSubmit();
   }
 }

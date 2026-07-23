@@ -19,12 +19,12 @@ import java.util.List;
  * Servicio del Agente Inteligente de Atención al Cliente (Ciclo 2 — CU-22/23).
  *
  * Gestiona el ciclo de vida del diálogo en 3 fases:
- *   IDENTIFICACION → identifica la política correcta para el cliente
- *   REQUISITOS     → guía al cliente por los requisitos iniciales
- *   CONFIRMACION   → confirma los datos antes de iniciar el trámite
+ * IDENTIFICACION → identifica la política correcta para el cliente
+ * REQUISITOS → guía al cliente por los requisitos iniciales
+ * CONFIRMACION → confirma los datos antes de iniciar el trámite
  *
  * Principio SRP: solo gestiona el estado de la sesión;
- *                la lógica de IA está en AIService.
+ * la lógica de IA está en AIService.
  */
 @Slf4j
 @Service
@@ -60,13 +60,29 @@ public class AgenteService {
                 });
     }
 
+    /**
+     * Crea una nueva sesión de diálogo para un usuario no autenticado (Demo).
+     */
+    public AgenteSession iniciarSesionDemo() {
+        AgenteSession nueva = AgenteSession.builder()
+                .clienteId("demo")
+                .fase("IDENTIFICACION")
+                .activa(true)
+                .fechaCreacion(LocalDateTime.now())
+                .fechaActualizacion(LocalDateTime.now())
+                .build();
+        nueva = agenteRepository.save(nueva);
+        log.info("🤖 Nueva sesión de agente DEMO iniciada: {}", nueva.getId());
+        return nueva;
+    }
+
     // ── Procesar mensaje del cliente ──────────────────────────────────────────
 
     /**
      * Procesa un mensaje del cliente y genera la respuesta del agente.
      * La lógica varía según la fase de la sesión.
      *
-     * @param sessionId ID de la sesión activa
+     * @param sessionId      ID de la sesión activa
      * @param mensajeCliente Mensaje enviado por el cliente
      * @return Sesión actualizada con la respuesta del agente añadida
      */
@@ -84,8 +100,8 @@ public class AgenteService {
         // Procesar según fase
         String respuesta = switch (sesion.getFase()) {
             case "IDENTIFICACION" -> procesarFaseIdentificacion(sesion, mensajeCliente);
-            case "REQUISITOS"     -> procesarFaseRequisitos(sesion, mensajeCliente);
-            case "CONFIRMACION"   -> procesarFaseConfirmacion(sesion, mensajeCliente);
+            case "REQUISITOS" -> procesarFaseRequisitos(sesion, mensajeCliente);
+            case "CONFIRMACION" -> procesarFaseConfirmacion(sesion, mensajeCliente);
             default -> "Sesión en estado inesperado. Por favor inicia una nueva sesión.";
         };
 
@@ -133,7 +149,8 @@ public class AgenteService {
                     // Si no hay requisitos, ir directo a confirmación
                     if (politica.getRequisitosIniciales() == null || politica.getRequisitosIniciales().isEmpty()) {
                         sesion.setFase("CONFIRMACION");
-                        return transicion + "\n\nEste trámite no requiere documentos previos. ¿Deseas iniciarlo ahora? (Sí/No)";
+                        return transicion
+                                + "\n\nEste trámite no requiere documentos previos. ¿Deseas iniciarlo ahora? (Sí/No)";
                     }
 
                     RequisitoTramite primerRequisito = politica.getRequisitosIniciales().get(0);
@@ -171,7 +188,8 @@ public class AgenteService {
 
             if (obligatorio && !tieneArchivoFisico) {
                 // Forzar a que suba el archivo físicamente
-                return "⚠️ Este requisito es **obligatorio**. Por favor, adjunta el archivo correspondiente (" + requisito.getNombre() + ") usando el icono de clip 📎 y envíalo para poder avanzar.";
+                return "⚠️ Este requisito es **obligatorio**. Por favor, adjunta el archivo correspondiente ("
+                        + requisito.getNombre() + ") usando el icono de clip 📎 y envíalo para poder avanzar.";
             }
 
             if (tieneArchivoFisico || diceTener) {
@@ -210,19 +228,25 @@ public class AgenteService {
         if (confirma) {
             sesion.setFase("COMPLETADA");
             sesion.setActiva(false);
-            
+
+            // Si es una sesión demo, no creamos un trámite real en la base de datos
+            if ("demo".equals(sesion.getClienteId())) {
+                return "🎉 ¡Excelente! En un entorno real con cuenta, tu trámite habría sido creado exitosamente en este paso.\n\n"
+                        +
+                        "Para iniciar este trámite y realizar su seguimiento, por favor **inicia sesión** o **regístrate** en la plataforma. ¡Te esperamos! 😊";
+            }
+
             // Crear el trámite automáticamente
             com.workflow.backend.models.Tramite nuevoTramite = tramiteService.iniciarTramite(
                     sesion.getPoliticaId(),
                     sesion.getClienteId(),
-                    "Iniciado vía Agente Inteligente (Asistente IA)"
-            );
-            
+                    "Iniciado vía Agente Inteligente (Asistente IA)");
+
             sesion.setTramiteId(nuevoTramite.getId());
-            
+
             return "🎉 ¡Perfecto! Tu trámite ha sido creado exitosamente.\n\n" +
-                   "El código de seguimiento de tu trámite es: **" + nuevoTramite.getNumeroReferencia() + "**.\n" +
-                   "Puedes consultarlo en cualquier momento desde tu panel principal.";
+                    "El código de seguimiento de tu trámite es: **" + nuevoTramite.getNumeroReferencia() + "**.\n" +
+                    "Puedes consultarlo en cualquier momento desde tu panel principal.";
         } else {
             sesion.setFase("ABANDONADA");
             sesion.setActiva(false);
@@ -254,5 +278,39 @@ public class AgenteService {
         });
     }
 
+    /**
+     * Reclama una sesión de demo asociándola al cliente logueado y creando el
+     * trámite real.
+     */
+    public AgenteSession reclamarSesion(String sessionId, String clienteId) {
+        AgenteSession sesion = agenteRepository.findById(sessionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Sesión demo no encontrada: " + sessionId));
 
+        if (!"demo".equals(sesion.getClienteId())) {
+            throw new IllegalStateException("Esta sesión ya está asociada a un cliente.");
+        }
+
+        // Asociar al cliente real
+        sesion.setClienteId(clienteId);
+
+        // Si ya identificamos la política, forzar fase de completado y crear trámite
+        // real
+        if (sesion.getPoliticaId() != null) {
+            sesion.setFase("COMPLETADA");
+            sesion.setActiva(false);
+
+            com.workflow.backend.models.Tramite nuevoTramite = tramiteService.iniciarTramite(
+                    sesion.getPoliticaId(),
+                    clienteId,
+                    "Iniciado vía Agente Inteligente (Demo Reclamada)");
+
+            sesion.setTramiteId(nuevoTramite.getId());
+        } else {
+            // Si por alguna razón no se identificó la política, la dejamos activa para el
+            // cliente
+            sesion.setFase("IDENTIFICACION");
+        }
+
+        return agenteRepository.save(sesion);
+    }
 }

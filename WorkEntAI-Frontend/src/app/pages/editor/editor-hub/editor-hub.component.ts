@@ -51,7 +51,7 @@ import { SidebarComponent, ADMIN_NAV_ITEMS } from '../../../components/sidebar/s
                 <tbody>
                   @for (draft of drafts; track draft.id) {
                     <tr>
-                      <td>{{ draft.nombre?.trim() || '(Sin nombre)' }}</td>
+                      <td>{{ draft.nombre.trim() || '(Sin nombre)' }}</td>
                       <td>{{ draft.version || 1 }}</td>
                       <td style="text-align: right; display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
                         <button class="btn-secondary" (click)="openEditor(draft.id)">Abrir editor</button>

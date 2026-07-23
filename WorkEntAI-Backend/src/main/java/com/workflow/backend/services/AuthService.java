@@ -30,10 +30,14 @@ public class AuthService {
         }
 
         String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().name());
-        return new AuthResponse(token, usuario.getId(), usuario.getEmail(), usuario.getNombre(), usuario.getRol().name(), usuario.getDepartamento());
+        return new AuthResponse(token, usuario.getId(), usuario.getEmail(), usuario.getNombre(),
+                usuario.getRol().name(), usuario.getDepartamento());
     }
 
     public AuthResponse register(RegisterRequest request) {
+        if (usuarioRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new BusinessException("El correo electrónico ya está registrado");
+        }
         Usuario usuario = new Usuario();
         usuario.setNombre(request.getNombre());
         usuario.setEmail(request.getEmail());
@@ -44,6 +48,7 @@ public class AuthService {
         usuarioRepository.save(usuario);
 
         String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().name());
-        return new AuthResponse(token, usuario.getId(), usuario.getEmail(), usuario.getNombre(), usuario.getRol().name(), usuario.getDepartamento());
+        return new AuthResponse(token, usuario.getId(), usuario.getEmail(), usuario.getNombre(),
+                usuario.getRol().name(), usuario.getDepartamento());
     }
 }

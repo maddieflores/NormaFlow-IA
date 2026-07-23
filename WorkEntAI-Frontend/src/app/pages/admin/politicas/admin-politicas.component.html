@@ -64,7 +64,7 @@
           <tbody>
             @for (p of filteredPoliticas; track p.id) {
             <tr style="border-bottom: 1px solid #f1f5f9;">
-              <td style="padding: 16px 8px; font-size: 14px; color: #334155; font-weight: 500;">{{ p.nombre?.trim() ||
+              <td style="padding: 16px 8px; font-size: 14px; color: #334155; font-weight: 500;">{{ p.nombre.trim() ||
                 '(Sin nombre)' }}</td>
               <td style="padding: 16px 8px; font-size: 14px; color: #475569; max-width: 250px;">
                 <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">

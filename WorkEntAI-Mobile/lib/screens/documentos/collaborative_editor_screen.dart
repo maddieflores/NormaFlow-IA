@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 import '../../services/auth_service.dart';
+import '../../config/app_config.dart';
 
 class CollaborativeEditorScreen extends StatefulWidget {
   final String docId;
@@ -28,7 +29,8 @@ class _CollaborativeEditorScreenState extends State<CollaborativeEditorScreen> {
 
   void _connectWebSocket() {
     // We assume backend is running on 10.0.2.2:8080 for Android Emulator or localhost for Web
-    final url = 'ws://10.0.2.2:8080/ws';
+    //final url = 'ws://10.0.2.2:8080/ws';
+    final url = AppConfig.wsUrl;
 
     _stompClient = StompClient(
       config: StompConfig(

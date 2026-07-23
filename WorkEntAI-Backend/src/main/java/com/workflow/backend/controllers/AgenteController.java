@@ -76,4 +76,46 @@ public class AgenteController {
         agenteService.cerrarSesion(sessionId);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Inicia una nueva sesión de diálogo para un usuario no autenticado (Demo).
+     */
+    @PostMapping("/demo/sesion")
+    public ResponseEntity<AgenteSession> iniciarSesionDemo() {
+        return ResponseEntity.ok(agenteService.iniciarSesionDemo());
+    }
+
+    /**
+     * Envía un mensaje del cliente al agente en el contexto de demo.
+     */
+    @PostMapping("/demo/sesion/{sessionId}/mensaje")
+    public ResponseEntity<AgenteSession> enviarMensajeDemo(
+            @PathVariable String sessionId,
+            @RequestBody Map<String, String> body) {
+        String mensaje = body.getOrDefault("mensaje", "");
+        return ResponseEntity.ok(agenteService.procesarMensaje(sessionId, mensaje));
+    }
+
+    /**
+     * Cierra la sesión de demo manualmente.
+     */
+    @DeleteMapping("/demo/sesion/{sessionId}")
+    public ResponseEntity<Void> cerrarSesionDemo(@PathVariable String sessionId) {
+        agenteService.cerrarSesion(sessionId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Reclama una sesión demo para un cliente autenticado.
+     */
+    @PostMapping("/sesion/reclamar/{sessionId}")
+    @PreAuthorize("hasRole('CLIENTE')")
+    public ResponseEntity<AgenteSession> reclamarSesion(
+            @PathVariable String sessionId,
+            Authentication auth) {
+        String email = auth.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new com.workflow.backend.exception.ResourceNotFoundException("Cliente", email));
+        return ResponseEntity.ok(agenteService.reclamarSesion(sessionId, usuario.getId()));
+    }
 }

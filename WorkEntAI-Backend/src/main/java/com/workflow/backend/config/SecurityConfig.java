@@ -33,8 +33,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Preflight OPTIONS siempre permitido
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -61,16 +60,17 @@ public class SecurityConfig {
                         // Tareas por departamento: ADMIN o FUNCIONARIO
                         .requestMatchers("/api/tareas/departamento/**").hasAnyRole("ADMIN", "FUNCIONARIO")
                         // ── Ciclo 2 ──────────────────────────────────────────────────────────
-                        // Documentos: todos los autenticados pueden subir/ver (RBAC interno en DocumentoService)
+                        // Documentos: todos los autenticados pueden subir/ver (RBAC interno en
+                        // DocumentoService)
                         .requestMatchers("/api/documentos/**").authenticated()
                         // Agente IA: solo CLIENTE puede iniciar sesiones
+                        .requestMatchers("/api/agente/demo/**").permitAll()
                         .requestMatchers("/api/agente/**").authenticated()
                         // Predictor: autenticados (score de riesgo visible para todos)
                         .requestMatchers("/api/predictor/**").authenticated()
                         // Reportes NLP: solo ADMIN
                         .requestMatchers("/api/reportes/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
@@ -85,7 +85,8 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // Orígenes explícitos desde variable de entorno (separados por coma)
-        // allowCredentials=true es incompatible con wildcard "*", se necesitan orígenes exactos
+        // allowCredentials=true es incompatible con wildcard "*", se necesitan orígenes
+        // exactos
         List<String> origins = Arrays.stream(allowedOriginsRaw.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())

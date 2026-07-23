@@ -8,6 +8,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/login/login.component').then(m => m.LoginComponent)
   },
+  {
+    path: 'demo',
+    loadComponent: () =>
+      import('./pages/demo-agente-ia/demo-agente-ia.component').then(m => m.DemoAgenteIaComponent)
+  },
   // ADMIN routes
   {
     path: 'admin',
